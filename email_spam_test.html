@@ -113,6 +113,10 @@
           <button class="chip" type="button" data-example="phishing">Load phishing-like example</button>
           <button class="chip" type="button" data-example="scamVi">Mẫu lừa đảo tiếng Việt</button>
           <button class="chip" type="button" data-example="hamVi">Mẫu hợp lệ tiếng Việt</button>
+          <button class="chip" type="button" data-example="advancedEn">Advanced scam EN</button>
+          <button class="chip" type="button" data-example="advancedVi">Chuyển tiền trước VI</button>
+          <button class="chip" type="button" data-example="jobVi">Việc làm nạp tiền VI</button>
+          <button class="chip" type="button" data-example="safetyVi">Cảnh báo OTP hợp lệ</button>
         </div>
         <div class="actions">
           <button class="primary" id="classifyButton" type="button">Classify email</button>
@@ -176,7 +180,11 @@ We detected unusual activity. Verify your account immediately by clicking the li
 
 Mình gửi biên bản cuộc họp chiều nay. Nhờ mọi người xem lại tiến độ dự án và cập nhật phần việc đang phụ trách trước 9 giờ sáng mai.
 
-Cảm ơn mọi người.`
+Cảm ơn mọi người.`,
+      advancedEn: `Your loyalty gift is waiting. To receive the free reward, wire the shipping and processing fee in advance. Buy a gift card and send the code today. Keep this confidential or the offer will expire.`,
+      advancedVi: `Bạn được tặng quà tri ân trị giá 20.000.000 đồng. Để nhận quà, vui lòng chuyển tiền trước phí xử lý và phí vận chuyển. Giữ bí mật thông tin này và gửi ảnh biên lai ngay hôm nay.`,
+      jobVi: `Tuyển cộng tác viên online làm nhiệm vụ chốt đơn. Vui lòng nạp tiền trước để nhận hoa hồng cao và kết bạn Zalo ngay hôm nay.`,
+      safetyVi: `Bạn đã chuyển khoản 500.000 đồng thành công. Tuyệt đối không cung cấp mã OTP cho bất kỳ ai. Nếu cần hỗ trợ, vui lòng gọi tổng đài chính thức.`
     };
 
     const rules = [
@@ -190,11 +198,29 @@ Cảm ơn mọi người.`
       [/\bbitcoin\b|\bcrypto\b/gi, "crypto", .13], [/\bunsubscribe\b/gi, "unsubscribe", .05],
       [/\$\s?\d[\d,.]*/g, "money amount", .08], [/https?:\/\/|www\./gi, "URL", .07],
 
+      // Advanced English scam signals. Generic words receive modest weights;
+      // contextRules below assign stronger scores when suspicious signals co-occur.
+      [/\b(?:gift|reward|giveaway|bonus|loyalty gift|promotional gift)\b/gi, "gift or reward", .08],
+      [/\b(?:wire transfer|bank transfer|send money|transfer funds|remit payment)\b/gi, "money transfer", .08],
+      [/\b(?:pay|payment|fee|deposit).{0,30}(?:upfront|in advance|beforehand|first)\b|\b(?:upfront|advance).{0,15}(?:fee|payment|deposit)\b/gi, "upfront payment", .16],
+      [/\b(?:shipping|delivery|processing|handling|customs|clearance|insurance|release|activation|administration) fee\b/gi, "suspicious fee", .12],
+      [/\b(?:gift card|prepaid card|voucher|itunes card|steam card|google play card)\b/gi, "gift card payment", .17],
+      [/\b(?:send|share|provide|read).{0,20}(?:otp|verification code|security code|pin)\b/gi, "request verification code", .18],
+      [/\b(?:keep (?:this|it) confidential|do not tell anyone|do not contact the bank|keep it secret)\b/gi, "secrecy request", .16],
+      [/\b(?:safe account|secure account|temporary account).{0,25}(?:transfer|deposit|send)\b|\btransfer.{0,25}(?:safe account|secure account)\b/gi, "transfer to safe account", .20],
+      [/\b(?:guaranteed returns?|risk[- ]free profit|double your money|high returns?|passive income)\b/gi, "guaranteed profit", .14],
+      [/\b(?:task scam|complete tasks?|product optimization|boost orders?|earn commission|remote job)\b/gi, "job or task offer", .10],
+      [/\b(?:whatsapp|telegram|signal app)\b/gi, "external messaging app", .06],
+      [/\b(?:scan|open).{0,15}(?:qr|link)\b/gi, "scan QR or open link", .10],
+      [/\b(?:refund|rebate).{0,25}(?:claim|receive|process|fee)\b/gi, "refund lure", .10],
+      [/\b(?:ssn|social security number|passport|identity card|bank details)\b/gi, "personal information request", .11],
+
       // Vietnamese scam signals: accented and unaccented variants.
       [/trúng thưởng|trung thuong|nhận thưởng|nhan thuong|giải thưởng|giai thuong/gi, "trúng thưởng", .20],
-      [/quà tặng|qua tang|nhận quà|nhan qua/gi, "nhận quà", .09],
-      [/phí nhận thưởng|phi nhan thuong|phí vận chuyển|phi van chuyen|nộp phí|nop phi/gi, "yêu cầu nộp phí", .17],
+      [/quà tặng|qua tang|nhận quà|nhan qua|tặng quà|tang qua|quà tri ân|qua tri an|quà miễn phí|qua mien phi/gi, "nhận quà", .09],
+      [/phí nhận thưởng|phi nhan thuong|phí vận chuyển|phi van chuyen|nộp phí|nop phi|phí xử lý|phi xu ly|phí mở khóa|phi mo khoa|phí bảo hiểm|phi bao hiem|phí hải quan|phi hai quan|phí giao hàng|phi giao hang/gi, "yêu cầu nộp phí", .17],
       [/chuyển khoản|chuyen khoan/gi, "chuyển khoản", .06],
+      [/chuyển tiền trước|chuyen tien truoc|thanh toán trước|thanh toan truoc|đóng tiền trước|dong tien truoc|trả phí trước|tra phi truoc/gi, "chuyển tiền trước", .18],
       [/(?:vui lòng|vui long|hãy|hay|yêu cầu|yeu cau).{0,60}(?:cung cấp|cung cap|gửi|gui|đọc|doc)\s+(?:mã otp|ma otp)|(?:gửi|gui|đọc|doc)\s+(?:mã otp|ma otp).{0,20}(?:ngay|cho|qua|vào|vao)/gi, "yêu cầu cung cấp OTP", .19],
       [/mã otp|ma otp|mã xác thực|ma xac thuc/gi, "nhắc đến OTP", .05],
       [/xác minh tài khoản|xac minh tai khoan|xác thực tài khoản|xac thuc tai khoan|đăng nhập ngay|dang nhap ngay/gi, "xác minh tài khoản", .16],
@@ -207,8 +233,75 @@ Cảm ơn mọi người.`
       [/việc nhẹ lương cao|viec nhe luong cao|làm việc tại nhà|lam viec tai nha/gi, "việc làm đáng ngờ", .14],
       [/nạp tiền|nap tien|đặt cọc|dat coc|ứng trước|ung truoc/gi, "yêu cầu nạp tiền", .12],
       [/cccd|căn cước công dân|can cuoc cong dan|thông tin cá nhân|thong tin ca nhan/gi, "yêu cầu thông tin cá nhân", .10],
-      [/\btelegram\b|kết bạn zalo|ket ban zalo/gi, "liên hệ ngoài luồng", .07],
-      [/\d[\d.,]{4,}\s*(?:đồng|vnd|vnđ)/gi, "số tiền VND", .07]
+      [/\btelegram\b|kết bạn zalo|ket ban zalo|liên hệ zalo|lien he zalo/gi, "liên hệ ngoài luồng", .07],
+      [/\d[\d.,]{4,}\s*(?:đồng|vnd|vnđ)/gi, "số tiền VND", .07],
+      [/giữ bí mật|giu bi mat|không được nói với ai|khong duoc noi voi ai|không liên hệ ngân hàng|khong lien he ngan hang/gi, "yêu cầu giữ bí mật", .16],
+      [/tài khoản an toàn|tai khoan an toan|tài khoản tạm giữ|tai khoan tam giu/gi, "tài khoản an toàn giả", .16],
+      [/quét mã qr|quet ma qr|quét qr|quet qr|gửi ảnh biên lai|gui anh bien lai/gi, "QR hoặc ảnh biên lai", .10],
+      [/làm nhiệm vụ|lam nhiem vu|nhận hoa hồng|nhan hoa hong|tối ưu đơn hàng|toi uu don hang|chốt đơn ảo|chot don ao/gi, "nhiệm vụ nhận hoa hồng", .14],
+      [/hoàn tiền|hoan tien|hoàn thuế|hoan thue|nhận lại tiền|nhan lai tien/gi, "mồi hoàn tiền", .09],
+      [/thẻ cào|the cao|mã thẻ|ma the|gift card|usdt/gi, "thanh toán khó truy vết", .15]
+    ];
+
+    const contextRules = [
+      {
+        patterns: [/(?:\bgift\b|\breward\b|\bprize\b|\bgiveaway\b|quà(?:\s+tặng)?|\bqua(?:\s+tang)?\b|trúng thưởng|\btrung thuong\b)/i, /(?:\bfee\b|\bdeposit\b|\bpay\b|\btransfer\b|\bwire\b|phí|\bphi\b|chuyển|\bchuyen\b|thanh toán|\bthanh toan\b)/i],
+        label: "gift + upfront fee / quà tặng + trả phí",
+        weight: .25
+      },
+      {
+        patterns: [/(?:transfer|wire|send money|chuyển khoản|chuyen khoan|chuyển tiền|chuyen tien|thanh toán|thanh toan)/i, /(?:upfront|in advance|before|first|trước|truoc|đặt cọc|dat coc|ứng trước|ung truoc)/i],
+        label: "upfront transfer / chuyển tiền trước",
+        weight: .22
+      },
+      {
+        patterns: [/(?:transfer|wire|send money|chuyển|chuyen|nạp tiền|nap tien)/i, /(?:secret|confidential|do not tell|giữ bí mật|giu bi mat|không được nói|khong duoc noi)/i],
+        label: "money + secrecy / tiền + giữ bí mật",
+        weight: .25
+      },
+      {
+        patterns: [/(?:\botp\b|\bverification code\b|\bsecurity code\b|\bpin\b|mã xác thực|\bma xac thuc\b)/i, /(?:\bsend\b|\bshare\b|\bprovide\b|\bread\b|gửi|\bgui\b|cung cấp|\bcung cap\b|đọc|\bdoc\b)/i],
+        label: "requested OTP or code / yêu cầu mã xác thực",
+        weight: .22
+      },
+      {
+        patterns: [/(?:account|bank|tài khoản|tai khoan|ngân hàng|ngan hang)/i, /(?:locked|suspended|closure|khóa|khoa|tạm khóa|tam khoa)/i, /(?:link|verify|login|liên kết|lien ket|xác minh|xac minh|đăng nhập|dang nhap)/i],
+        label: "account threat + link / dọa khóa tài khoản",
+        weight: .24
+      },
+      {
+        patterns: [/(?:job|task|commission|việc|viec|nhiệm vụ|nhiem vu|hoa hồng|hoa hong)/i, /(?:deposit|top up|pay|transfer|nạp tiền|nap tien|đặt cọc|dat coc|ứng trước|ung truoc)/i],
+        label: "job + deposit / việc làm + nạp tiền",
+        weight: .24
+      },
+      {
+        patterns: [/(?:police|court|investigation|công an|cong an|tòa án|toa an|điều tra|dieu tra|rửa tiền|rua tien)/i, /(?:transfer|deposit|safe account|chuyển|chuyen|nạp tiền|nap tien|tài khoản an toàn|tai khoan an toan)/i],
+        label: "authority impersonation + money / mạo danh + chuyển tiền",
+        weight: .27
+      }
+    ];
+
+    const safetyRules = [
+      {
+        pattern: /\b(?:never|do not|don't).{0,35}(?:share|send|provide|read).{0,25}(?:otp|verification code|security code|pin)\b/i,
+        label: "security notice: never share OTP",
+        weight: .38
+      },
+      {
+        pattern: /(?:không|khong|tuyệt đối không|tuyet doi khong).{0,35}(?:cung cấp|cung cap|gửi|gui|đọc|doc).{0,25}(?:mã otp|ma otp|mã xác thực|ma xac thuc)/i,
+        label: "cảnh báo: không cung cấp OTP",
+        weight: .38
+      },
+      {
+        pattern: /\b(?:no payment required|never ask.{0,30}(?:transfer|payment|fee)|do not transfer money)\b/i,
+        label: "security notice: no payment requested",
+        weight: .20
+      },
+      {
+        pattern: /(?:không yêu cầu|khong yeu cau).{0,35}(?:chuyển khoản|chuyen khoan|chuyển tiền|chuyen tien|nộp phí|nop phi|thanh toán|thanh toan)/i,
+        label: "cảnh báo: không yêu cầu chuyển tiền",
+        weight: .20
+      }
     ];
 
     const $ = id => document.getElementById(id);
@@ -227,10 +320,16 @@ Cảm ơn mọi người.`
         const matches = text.match(pattern);
         if (matches) { score += weight * Math.min(matches.length, 2); signals.push(label); }
       }
+      for (const { patterns, label, weight } of contextRules) {
+        if (patterns.every(pattern => pattern.test(text))) { score += weight; signals.push(label); }
+      }
+      for (const { pattern, label, weight } of safetyRules) {
+        if (pattern.test(text)) { score -= weight; signals.push(label); }
+      }
       if ((text.match(/\b[A-Z]{4,}\b/g) || []).length >= 2) { score += .08; signals.push("uppercase emphasis"); }
       const exclamations = (text.match(/!/g) || []).length;
       if (exclamations >= 2) { score += Math.min(.12, exclamations * .025); signals.push("many exclamation marks"); }
-      score = Math.min(.99, score);
+      score = Math.max(.01, Math.min(.99, score));
       return { prediction: score >= .5 ? "spam" : "ham", score, signals: [...new Set(signals)] };
     }
 
