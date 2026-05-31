@@ -195,7 +195,7 @@ Cảm ơn mọi người.`,
       [/\burgent\b/gi, "urgent", .11], [/\bverify (?:your )?(?:account|password)\b/gi, "verify account", .17],
       [/\bpassword\b/gi, "password", .08], [/\bsuspended\b/gi, "suspended", .11],
       [/\bviagra\b/gi, "viagra", .28], [/\bcasino\b/gi, "casino", .20],
-      [/\bbitcoin\b|\bcrypto\b/gi, "crypto", .13], [/\bunsubscribe\b/gi, "unsubscribe", .05],
+      [/\bbitcoin\b|\bcrypto(?:currency|currencies)?\b|\busdt\b|\btether\b|\bethereum\b|\bwallet\b/gi, "crypto or wallet", .10], [/\bunsubscribe\b/gi, "unsubscribe", .05],
       [/\$\s?\d[\d,.]*/g, "money amount", .08], [/https?:\/\/|www\./gi, "URL", .07],
 
       // Advanced English scam signals. Generic words receive modest weights;
@@ -214,6 +214,11 @@ Cảm ơn mọi người.`,
       [/\b(?:scan|open).{0,15}(?:qr|link)\b/gi, "scan QR or open link", .10],
       [/\b(?:refund|rebate).{0,25}(?:claim|receive|process|fee)\b/gi, "refund lure", .10],
       [/\b(?:ssn|social security number|passport|identity card|bank details)\b/gi, "personal information request", .11],
+      [/\b(?:crypto(?:currency)?|usdt|tether|bitcoin|wallet).{0,30}(?:balance|account|funds?|assets?|money)\b|\b(?:balance|funds?|assets?).{0,30}(?:usdt|crypto(?:currency)?|bitcoin|wallet)\b/gi, "crypto account balance", .16],
+      [/\b(?:login|security|account|wallet|instagram).{0,20}password\b|\bpassword\s*:/gi, "shared login password", .15],
+      [/\b(?:username|user name|login id|account id)\s*:/gi, "shared username", .09],
+      [/\b(?:seed phrase|recovery phrase|private key|secret key|wallet key)\b/gi, "wallet secret phrase", .26],
+      [/\b(?:inheritance|last resort|family affection|for the rest of your life|make you happy)\b/gi, "emotional crypto story", .09],
 
       // Vietnamese scam signals: accented and unaccented variants.
       [/trúng thưởng|trung thuong|nhận thưởng|nhan thuong|giải thưởng|giai thuong/gi, "trúng thưởng", .20],
@@ -278,6 +283,21 @@ Cảm ơn mọi người.`,
         patterns: [/(?:police|court|investigation|công an|cong an|tòa án|toa an|điều tra|dieu tra|rửa tiền|rua tien)/i, /(?:transfer|deposit|safe account|chuyển|chuyen|nạp tiền|nap tien|tài khoản an toàn|tai khoan an toan)/i],
         label: "authority impersonation + money / mạo danh + chuyển tiền",
         weight: .27
+      },
+      {
+        patterns: [/(?:crypto(?:currency)?|usdt|tether|bitcoin|wallet)/i, /(?:balance|funds?|assets?|account)/i, /(?:password|seed phrase|private key|username|login)/i],
+        label: "crypto balance + credentials / ví crypto + thông tin đăng nhập",
+        weight: .34
+      },
+      {
+        patterns: [/(?:password|seed phrase|private key|username|login)/i, /(?:https?:\/\/|www\.|website\s*:)/i],
+        label: "credentials + website / thông tin đăng nhập + website",
+        weight: .20
+      },
+      {
+        patterns: [/(?:usdt|crypto(?:currency)?|bitcoin|wallet)/i, /(?:inheritance|family|separated|last resort|make you happy|rest of your life)/i],
+        label: "emotional crypto lure / câu chuyện cảm xúc + crypto",
+        weight: .17
       }
     ];
 
