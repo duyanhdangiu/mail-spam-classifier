@@ -157,7 +157,7 @@
         <div id="quiz-container">
         </div>
 
-        <button id="submit-btn" class="btn" onclick="checkAnswers()">Nộp Bài / Xem Kết Quả</button>
+        <button id="submit-btn" class="btn" onclick="showResults()" style="display: none;">Kết Thúc Sớm</button>
 
         <div id="result-box" class="result-box">
             <h2>Kết Quả Làm Bài</h2>
@@ -424,52 +424,65 @@
         let score = 0;
         let timeLeft = 0;
         let timerInterval;
+        let currentQuestionIndex = 0;
+        let firstTry = true;
 
-        // Render toàn bộ đề thi lên trang web
+        // Render từng câu hỏi lên trang web
         function renderQuiz() {
             const container = document.getElementById('quiz-container');
             container.innerHTML = '';
 
-            document.getElementById('progress').innerText = `Tổng số câu hỏi: ${questions.length}`;
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
 
-            questions.forEach((qData, index) => {
-                const card = document.createElement('div');
-                card.className = 'question-card';
-                card.id = `q-card-${index}`;
+            document.getElementById('progress').innerText = `Câu hỏi: ${currentQuestionIndex + 1} / ${questions.length}`;
+            
+            firstTry = true;
+            const qData = questions[currentQuestionIndex];
+            const index = currentQuestionIndex;
 
-                const qText = document.createElement('div');
-                qText.className = 'question-text';
-                qText.innerText = `Câu ${index + 1}: ${qData.q}`;
-                card.appendChild(qText);
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-card-${index}`;
 
-                const optionsContainer = document.createElement('div');
-                optionsContainer.className = 'options-container';
+            const qText = document.createElement('div');
+            qText.className = 'question-text';
+            qText.innerText = `Câu ${index + 1}: ${qData.q}`;
+            card.appendChild(qText);
 
-                qData.options.forEach((opt, optIndex) => {
-                    const label = document.createElement('label');
-                    label.className = 'option-label';
-                    label.id = `label-${index}-${optIndex}`;
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'options-container';
 
-                    const input = document.createElement('input');
-                    input.type = 'radio';
-                    input.name = `question-${index}`;
-                    input.value = optIndex;
+            qData.options.forEach((opt, optIndex) => {
+                const label = document.createElement('label');
+                label.className = 'option-label';
+                label.id = `label-${index}-${optIndex}`;
 
-                    label.appendChild(input);
-                    label.appendChild(document.createTextNode(` ${String.fromCharCode(65 + optIndex)}. ${opt}`));
-                    optionsContainer.appendChild(label);
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = `question-${index}`;
+                input.value = optIndex;
+                
+                input.addEventListener('change', function() {
+                    checkSingleAnswer(parseInt(this.value), qData, index);
                 });
 
-                card.appendChild(optionsContainer);
-
-                const exp = document.createElement('div');
-                exp.className = 'explanation';
-                exp.id = `explanation-${index}`;
-                exp.innerText = `Nguồn tài liệu: ${qData.ref} | Đáp án đúng là mục tương ứng chữ đậm trong file ôn tập.`;
-                card.appendChild(exp);
-
-                container.appendChild(card);
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(` ${String.fromCharCode(65 + optIndex)}. ${opt}`));
+                optionsContainer.appendChild(label);
             });
+
+            card.appendChild(optionsContainer);
+
+            const exp = document.createElement('div');
+            exp.className = 'explanation';
+            exp.id = `explanation-${index}`;
+            exp.innerText = `Nguồn tài liệu: ${qData.ref} | Chuyển sang câu tiếp theo...`;
+            card.appendChild(exp);
+
+            container.appendChild(card);
         }
 
         // Tính toán thời gian làm bài
@@ -482,31 +495,36 @@
             }, 1000);
         }
 
+        function checkSingleAnswer(userAns, qData, index) {
+            const label = document.getElementById(`label-${index}-${userAns}`);
+            const correctLabel = document.getElementById(`label-${index}-${qData.correct}`);
+            const explanation = document.getElementById(`explanation-${index}`);
+            
+            if (userAns === qData.correct) {
+                if (firstTry) score++;
+                correctLabel.classList.add('correct');
+                explanation.style.display = 'block';
+                
+                // Disable all inputs
+                const inputs = document.querySelectorAll(`input[name="question-${index}"]`);
+                inputs.forEach(inp => inp.disabled = true);
+                
+                // Move to next question after 1.2 seconds
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    renderQuiz();
+                }, 1200);
+            } else {
+                firstTry = false;
+                label.classList.add('incorrect');
+            }
+        }
+
         // Chấm điểm bài thi và hiển thị đáp án, lời giải
-        function checkAnswers() {
+        function showResults() {
             clearInterval(timerInterval);
-            score = 0;
-
-            questions.forEach((qData, index) => {
-                const selected = document.querySelector(`input[name="question-${index}"]:checked`);
-                const explanation = document.getElementById(`explanation-${index}`);
-                explanation.style.display = 'block'; // Hiện lời giải thích nguồn câu hỏi
-
-                // Tô màu đáp án đúng gốc
-                const correctLabel = document.getElementById(`label-${index}-${qData.correct}`);
-                if (correctLabel) correctLabel.classList.add('correct');
-
-                if (selected) {
-                    const userAns = parseInt(selected.value);
-                    if (userAns === qData.correct) {
-                        score++;
-                    } else {
-                        // Nếu chọn sai thì tô màu đỏ vị trí click sai
-                        const incorrectLabel = document.getElementById(`label-${index}-${userAns}`);
-                        if (incorrectLabel) incorrectLabel.classList.add('incorrect');
-                    }
-                }
-            });
+            document.getElementById('quiz-container').innerHTML = '';
+            document.getElementById('submit-btn').style.display = 'none';
 
             // Hiện bảng kết quả lên màn hình
             document.getElementById('result-box').style.display = 'block';
@@ -515,8 +533,8 @@
             const percentage = (score / questions.length) * 100;
             let feedback = "";
             if (percentage >= 80) feedback = "Xuất sắc! Bạn đã nắm rất vững kiến thức lý thuyết văn phòng. 🎉";
-            else if (percentage >= 50) feedback = "Đạt yêu cầu! Hãy cuộn xuống rà soát lại các câu sai màu đỏ nhé. 👍";
-            else feedback = "Cần ôn tập kỹ lại! Hãy xem lại các câu có highlight xanh để ghi nhớ phím tắt và câu lệnh. 📑";
+            else if (percentage >= 50) feedback = "Đạt yêu cầu! Cố gắng luyện tập thêm nhé. 👍";
+            else feedback = "Cần ôn tập kỹ lại! Hãy xem lại tài liệu để nhớ kiến thức. 📑";
 
             document.getElementById('feedback-text').innerText = feedback;
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
