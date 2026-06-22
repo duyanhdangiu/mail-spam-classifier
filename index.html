@@ -1,411 +1,534 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Email Spam Classifier Demo</title>
-  <style>
-    :root {
-      --ink: #172026;
-      --muted: #66747a;
-      --line: #dbe2df;
-      --teal: #087f73;
-      --teal-dark: #075e57;
-      --teal-soft: #daf3ef;
-      --red: #bd4036;
-      --red-soft: #fde5e1;
-      --amber-soft: #fff5df;
-      --shadow: 0 18px 55px rgba(25, 45, 48, .12);
-    }
-    * { box-sizing: border-box; }
-    body {
-      min-height: 100vh;
-      margin: 0;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 8% 10%, rgba(8,127,115,.18), transparent 30rem),
-        radial-gradient(circle at 92% 85%, rgba(242,169,59,.17), transparent 28rem),
-        #f6f2e9;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-    }
-    .page { width: min(1140px, calc(100% - 32px)); margin: auto; padding: 42px 0 52px; }
-    .hero { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
-    .eyebrow { color: var(--teal); font-size: 12px; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; }
-    h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 600; letter-spacing: -.045em; }
-    h1 { max-width: 760px; margin: 10px 0 7px; font-size: clamp(40px, 7vw, 68px); line-height: .98; }
-    h2 { margin: 0; font-size: 26px; }
-    .subtitle { max-width: 720px; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.65; }
-    .status { display: inline-flex; align-items: center; gap: 8px; padding: 10px 13px; border: 1px solid rgba(8,127,115,.3); border-radius: 999px; color: var(--teal-dark); background: rgba(218,243,239,.75); font-size: 12px; font-weight: 850; white-space: nowrap; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 4px rgba(8,127,115,.14); }
-    .layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, .85fr); gap: 20px; }
-    .card { border: 1px solid rgba(219,226,223,.95); border-radius: 22px; background: rgba(255,255,255,.88); box-shadow: var(--shadow); backdrop-filter: blur(14px); }
-    .compose { padding: 22px; }
-    .card-head, .score-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .hint { color: var(--muted); font-size: 12px; }
-    kbd { padding: 2px 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: white; font: inherit; font-size: 11px; }
-    label { display: block; margin: 16px 0 7px; color: #344148; font-size: 13px; font-weight: 850; }
-    textarea, input, select { width: 100%; border: 1px solid var(--line); border-radius: 12px; outline: 0; color: var(--ink); background: rgba(255,255,255,.9); font: inherit; transition: .15s; }
-    textarea:focus, input:focus, select:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(8,127,115,.12); }
-    textarea { min-height: 290px; padding: 15px; resize: vertical; line-height: 1.6; }
-    input, select { height: 42px; padding: 0 11px; }
-    .meta { display: flex; justify-content: space-between; margin-top: 7px; color: var(--muted); font-size: 12px; }
-    .examples { display: flex; flex-wrap: wrap; gap: 8px; margin: 17px 0; }
-    button { border: 0; font: inherit; cursor: pointer; transition: .15s; }
-    button:hover { transform: translateY(-1px); }
-    .chip { padding: 8px 11px; border: 1px solid var(--line); border-radius: 999px; color: #435158; background: white; font-size: 12px; font-weight: 750; }
-    .chip:hover { border-color: var(--teal); color: var(--teal-dark); }
-    .actions { display: flex; gap: 10px; }
-    .primary, .secondary { min-height: 46px; padding: 0 17px; border-radius: 12px; font-size: 14px; font-weight: 850; }
-    .primary { flex: 1; color: white; background: var(--teal); box-shadow: 0 10px 20px rgba(8,127,115,.19); }
-    .secondary { border: 1px solid var(--line); color: #4b585e; background: white; }
-    .primary:disabled { cursor: wait; opacity: .65; }
-    .side { display: grid; gap: 20px; align-content: start; }
-    .result { overflow: hidden; }
-    .result-top { padding: 21px; color: var(--teal-dark); background: var(--teal-soft); transition: .18s; }
-    .result.spam .result-top { color: #8f2d25; background: var(--red-soft); }
-    .result-label { margin-top: 8px; font-family: Georgia, serif; font-size: 43px; font-weight: 600; letter-spacing: -.06em; line-height: 1; }
-    .caption { margin-top: 8px; color: inherit; font-size: 13px; line-height: 1.45; opacity: .84; }
-    .result-body { padding: 18px 20px 20px; }
-    .score-row { font-size: 13px; font-weight: 850; }
-    .score { color: var(--teal); font-size: 23px; }
-    .spam .score { color: var(--red); }
-    .meter { height: 8px; margin: 10px 0 17px; overflow: hidden; border-radius: 999px; background: #edf0ee; }
-    .meter div { width: 5%; height: 100%; border-radius: inherit; background: var(--teal); transition: width .3s, background .18s; }
-    .spam .meter div { background: var(--red); }
-    .small-title { margin: 0 0 8px; color: #56636a; font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
-    .signals { display: flex; flex-wrap: wrap; gap: 6px; min-height: 27px; }
-    .signal { padding: 5px 8px; border-radius: 7px; color: #805121; background: #fff1d7; font-size: 12px; font-weight: 750; }
-    .empty, .footer { color: var(--muted); font-size: 12px; line-height: 1.6; }
-    .settings { padding: 19px; }
-    .api-settings { display: none; }
-    .api-settings.visible { display: block; }
-    .notice { margin-top: 14px; padding: 11px 12px; border-left: 3px solid #f2a93b; border-radius: 8px; color: #6a512b; background: var(--amber-soft); font-size: 12px; line-height: 1.55; }
-    .error { display: none; margin-top: 12px; color: var(--red); font-size: 12px; font-weight: 750; line-height: 1.5; }
-    .error.visible { display: block; }
-    .footer { margin-top: 18px; }
-    @media (max-width: 850px) { .hero { align-items: start; flex-direction: column; } .layout { grid-template-columns: 1fr; } }
-    @media (max-width: 520px) { .page { width: calc(100% - 20px); padding-top: 25px; } .compose { padding: 16px; } textarea { min-height: 230px; } .hint { display: none; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Ôn Thi Tin Học Văn Phòng 2016</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --secondary-color: #edf2f7;
+            --success-color: #48bb78;
+            --error-color: #f56565;
+            --text-color: #2d3748;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7fafc;
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        .quiz-info {
+            display: flex;
+            justify-content: space-between;
+            background: var(--secondary-color);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        .question-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fff;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .options-container {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-label:hover {
+            background-color: #f7fafc;
+            border-color: var(--primary-color);
+        }
+
+        .option-label input {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        /* State Styles */
+        .correct {
+            background-color: #c6f6d5 !important;
+            border-color: var(--success-color) !important;
+        }
+
+        .incorrect {
+            background-color: #fed7d7 !important;
+            border-color: var(--error-color) !important;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 25px;
+        }
+
+        .btn:hover {
+            background: #2b6cb0;
+        }
+
+        .result-box {
+            text-align: center;
+            padding: 20px;
+            background: #ebf8ff;
+            border-radius: 6px;
+            margin-top: 25px;
+            display: none;
+        }
+
+        .result-score {
+            font-size: 2rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+    </style>
 </head>
+
 <body>
-  <main class="page">
-    <header class="hero">
-      <div>
-        <div class="eyebrow">NLP Binary Classification</div>
-        <h1>Email Spam Classifier</h1>
-        <p class="subtitle">Kiểm tra nhanh nội dung email là spam hay không spam. Test whether an email is spam or ham from its text content.</p>
-      </div>
-      <div class="status"><span class="dot"></span><span id="modeStatus">Local demo active</span></div>
-    </header>
 
-    <section class="layout">
-      <article class="card compose">
-        <div class="card-head">
-          <h2>Test an email</h2>
-          <span class="hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> để phân loại</span>
+    <div class="container">
+        <h1>THI THỬ: TRẮC NGHIỆM TIN HỌC VĂN PHÒNG</h1>
+
+        <div class="quiz-info">
+            <span id="progress">Câu hỏi: 0 / 0</span>
+            <span id="timer">Thời gian: 00:00</span>
         </div>
-        <label for="emailText">Nội dung email / Email content</label>
-        <textarea id="emailText" maxlength="12000" placeholder="Dán nội dung email cần kiểm tra vào đây...&#10;Paste the email content here..."></textarea>
-        <div class="meta"><span id="wordCount">0 words</span><span id="charCount">0 / 12000 characters</span></div>
-        <div class="examples">
-          <button class="chip" type="button" data-example="spam">Load spam example</button>
-          <button class="chip" type="button" data-example="ham">Load ham example</button>
-          <button class="chip" type="button" data-example="phishing">Load phishing-like example</button>
-          <button class="chip" type="button" data-example="scamVi">Mẫu lừa đảo tiếng Việt</button>
-          <button class="chip" type="button" data-example="hamVi">Mẫu hợp lệ tiếng Việt</button>
-          <button class="chip" type="button" data-example="advancedEn">Advanced scam EN</button>
-          <button class="chip" type="button" data-example="advancedVi">Chuyển tiền trước VI</button>
-          <button class="chip" type="button" data-example="jobVi">Việc làm nạp tiền VI</button>
-          <button class="chip" type="button" data-example="safetyVi">Cảnh báo OTP hợp lệ</button>
+
+        <div id="quiz-container">
         </div>
-        <div class="actions">
-          <button class="primary" id="classifyButton" type="button">Classify email</button>
-          <button class="secondary" id="clearButton" type="button">Clear</button>
+
+        <button id="submit-btn" class="btn" onclick="checkAnswers()">Nộp Bài / Xem Kết Quả</button>
+
+        <div id="result-box" class="result-box">
+            <h2>Kết Quả Làm Bài</h2>
+            <div class="result-score" id="score-text">0 / 0</div>
+            <p id="feedback-text"></p>
+            <button class="btn" onclick="window.location.reload()" style="background: #4a5568;">Làm lại test
+                mới</button>
         </div>
-        <div class="error" id="error"></div>
-      </article>
+    </div>
 
-      <aside class="side">
-        <section class="card result" id="resultCard">
-          <div class="result-top">
-            <div class="eyebrow">Prediction / Dự đoán</div>
-            <div class="result-label" id="resultLabel">Waiting</div>
-            <div class="caption" id="caption">Nhập email và bấm Classify email để nhận kết quả.</div>
-          </div>
-          <div class="result-body">
-            <div class="score-row"><span>Spam score</span><span class="score" id="score">--</span></div>
-            <div class="meter"><div id="meter"></div></div>
-            <div class="small-title">Detected signals / Tín hiệu phát hiện</div>
-            <div class="signals" id="signals"><span class="empty">Chưa có dữ liệu / No data yet.</span></div>
-          </div>
-        </section>
+    <script>
+        // Dữ liệu câu hỏi trích xuất trực tiếp từ các file docx của bạn
+        // Các đáp án đúng (tô đậm trong đề) được cấu hình chính xác
+        const rawQuestions = [
+            {
+                q: "Khi nói về bộ nhớ RAM của máy tính, phát biểu nào sau đây là đúng?",
+                options: ["Là bộ nhớ truy xuất ngẫu nhiên", "Là bộ nhớ chỉ đọc", "Là bộ nhớ chỉ xử lý ký tự", "Là bộ nhớ chỉ xử lý hình ảnh"],
+                correct: 0,
+                ref: "Câu 1 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Thiết bị nào sau đây của máy tính không thuộc nhóm thiết bị xuất?",
+                options: ["Màn hình (Monitor)", "Máy in (Printer)", "Loa (Speaker)", "Máy quét (Scanner)"],
+                correct: 3,
+                ref: "Câu 2 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong máy tính, thiết bị nào là thiết bị lưu trữ dữ liệu lâu dài (kể cả khi tắt nguồn)?",
+                options: ["Bàn phím", "RAM", "Đĩa cứng", "Microphone"],
+                correct: 2,
+                ref: "Câu 3 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Phần mềm nào dưới đây không phải là phần mềm hệ thống?",
+                options: ["MS-DOS", "Linux", "Microsoft Windows", "Microsoft Excel"],
+                correct: 3,
+                ref: "Câu 4 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Phím nào trên bàn phím dùng để chuyển qua lại giữa chế độ gõ chữ in hoa và chữ thường?",
+                options: ["Caps lock", "Ctrl", "Alt", "Tab"],
+                correct: 0,
+                ref: "Câu 5 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Hệ điều hành Windows 10 là hệ điều hành có:",
+                options: ["Giao diện đồ hoạ", "Màn hình động", "Đa nhiệm", "Tất cả đều đúng"],
+                correct: 3,
+                ref: "Câu 6 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Thao tác nào sau đây dược dùng để chọn nhiều đối tượng không liên tiếp nhau trong hệ điều hành Windows 10?",
+                options: ["Nhấn giữ phím Ctrl và Click chuột vào từng đối tượng.", "Nhấn giữ phím Shift và Click chuột vào từng đối tượng.", "Click chuột phải tại từng đối tượng.", "Click chuột vào từng đối tượng."],
+                correct: 0,
+                ref: "Câu 7 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong hệ điều hành Windows 10, phát biểu nào không đúng?",
+                options: ["Folder có thể chứa các Folder con khác.", "Folder có thể chứa các File và Folder con khác.", "File có thể chứa File", "File dùng để lưu trữ dữ liệu."],
+                correct: 2,
+                ref: "Câu 8 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Windows 10, màn hình Desktop gồm những thành phần nào?",
+                options: ["Nút Start và thanh tác vụ (Taskbar)", "Các biểu tượng (Icons)", "Màn hình nền (Desktop)", "Tất cả đều đúng"],
+                correct: 3,
+                ref: "Câu 9 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong một cửa sổ Windows, nút Maximize trên thanh tiêu đề có chức năng gì?",
+                options: ["Phóng to cửa sổ đầy màn hình", "Phục hồi kích thước cửa sổ như trước đó", "Đóng cửa sổ", "Thu nhỏ cửa sổ thành cực tiểu"],
+                correct: 0,
+                ref: "Câu 10 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Word 2016, mặc định tài liệu được lưu với phần mở rộng là gì?",
+                options: [".dotx", ".doc", ".exe", ".docx"],
+                correct: 3,
+                ref: "Câu 12 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Word 2016, để trình bày văn bản với phông chữ VNI-Times thì phải chọn bảng mã nào trên bộ gõ (Unikey)?",
+                options: ["TCVN3 (ABC)", "VNI Windows", "Bảng mã khác", "Unicode"],
+                correct: 1,
+                ref: "Câu 13 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Word 2016, để tạo mới một tập tin văn bản ta sử dụng lệnh nào?",
+                options: ["File | New", "File | Open", "File | Print", "File | Close"],
+                correct: 0,
+                ref: "Câu 14 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Word 2016, chức năng Save As có tác dụng gì?",
+                options: ["Tạo ra một văn bản mới.", "Tạo ra một bản sao khác.", "Lưu những thay đổi của văn bản đang mở.", "Mở một văn bản cũ."],
+                correct: 1,
+                ref: "Câu 15 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Word 2016, tổ hợp phím nào để hủy bỏ thao tác vừa chọn?",
+                options: ["Ctrl +Y", "Ctrl + Z", "Ctrl + L", "Ctrl + T"],
+                correct: 1,
+                ref: "Câu 16 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Word 2016, thẻ Insert chứa các nhóm chức năng nào?",
+                options: [
+                    "Định dạng font chữ, định dạng đoạn, tìm và sửa lỗi sai",
+                    "Định dạng font chữ, chèn các ký tự đặc biệt và công thức toán, chèn liên kết",
+                    "Chèn liên kết, chèn bảng biểu, chèn các ký tự đặc biệt và công thức toán học",
+                    "Định dạng trang, phóng to/thu nhỏ cửa sổ"
+                ],
+                correct: 2,
+                ref: "Câu 17 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Word 2016, để chia cột ta chọn lệnh nào sau đây?",
+                options: ["Page Layout | Setup", "Page Layout | Columns", "Insert | Columns", "Page Layout | Margin"],
+                correct: 1,
+                ref: "Câu 18 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong MS Word 2016, lệnh Home | Format Painter có tác dụng gì?",
+                options: ["Sao chép nội dung của khối văn bản", "Sao chép định dạng của khối văn bản", "Sao chép cả nội dung và định dạng của khối văn bản", "Cả ba câu trên đều sai"],
+                correct: 1,
+                ref: "Câu 19 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Word 2016, để in từ trang 3 đến trang 8, người ta thực hiện lệnh nào sau đây?",
+                options: ["File | Print | tại ô Pages nhập 3.8", "File | Print | tại ô Pages nhập 3-8", "File | Print | tại ô Pages nhập 3,8", "File | Print | tại ô Pages nhập 3|8"],
+                correct: 1,
+                ref: "Câu 20 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Word 2016, tổ hợp phím Ctrl+E có tác dụng gì?",
+                options: ["Căn trái đoạn văn bản", "Căn phải đoạn văn bản", "Căn giữa đoạn văn bản", "Căn đều đoạn văn bản"],
+                correct: 2,
+                ref: "Câu 21 (NOI DUNG ON THI)"
+            },
+            {
+                q: "In Microsoft Excel 2016, nếu ta chọn ô A1 có sẵn giá trị dãy ký tự 'DongNai 3', sau sử dụng chức năng Autofill , thì kết quả nhận được tại ô G1 là:",
+                options: ["DongNai 8", "DongNai 9", "DongNai 10", "DongNai 11"],
+                correct: 1, // Kéo từ A đến G là tăng thêm 6 đơn vị: 3 + 6 = 9
+                ref: "Câu 23 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Excel 2016, công thức nào tính giá trị trung bình từ ô C3 đến ô C12?",
+                options: ["=SUM(C3:C12)", "=AVERAGE(C3,C12)", "=AVERAGE(C3+C12)", "=AVERAGE(C3:C12)"],
+                correct: 3,
+                ref: "Câu 24 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Excel 2016, khi nhập dữ liệu loại số vào trong ô, ô đó xuất hiện dạng ###### hoặc dạng số khoa học (Scientific) thì ta phải làm gì?",
+                options: ["Xóa đi nhập lại", "Thay đổi kiểu dữ liệu", "Thay đổi độ rộng cột", "Sai ở chỗ khác"],
+                correct: 2,
+                ref: "Câu 25 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Excel 2016, để xuống dòng trong cùng một ô, ta nhấn tổ hợp phím nào?",
+                options: ["Ctrl +Shift+ Enter", "Alt + Enter", "Ctrl +Enter", "Shift + Enter"],
+                correct: 1,
+                ref: "Câu 26 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Dựa vào thông tin cột Loại hình ảnh ví dụ câu 27 Excel, công thức điền cho ô Phụ Cấp E2 là:",
+                options: ["=HLOOKUP(C2,$C$11:$E$12,1,0)", "=HLOOKUP(C2,$C$11:$E$12,2,0)", "=VLOOKUP(C2,$C$11:$E$12,1,0)", "Tất cả đều sai"],
+                correct: 1,
+                ref: "Câu 27 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Excel 2016, công thức: =10/0 cho kết quả là gì?",
+                options: ["0", "10", "#VALUE!", "#DIV/0!"],
+                correct: 3,
+                ref: "Câu 28 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Excel 2016, hàm nào sau đây cho phép tính tổng các giá trị kiểu số thỏa mãn một điều kiện cho trước?",
+                options: ["SUM", "COUNTIF", "SUMIF", "COUNT"],
+                correct: 2,
+                ref: "Câu 29 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Excel 2016, công thức =IF(B5>B6,B5,B6) với B5=10, B6=20 cho kết quả là gì?",
+                options: ["10", "20", "30", "B6"],
+                correct: 1,
+                ref: "Câu 30 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong MS Excel 2016, công thức: =RIGHT('EXCEL2016',4) cho kết quả là:",
+                options: ["Một kiểu dữ liệu dạng số", "Một kiểu dữ liệu dạng chuỗi", "Một kiểu dữ liệu dạng năm", "Cả B và C đều đúng"],
+                correct: 3, // Hàm cắt chuỗi text cho kết quả dạng chuỗi "2016", đồng thời thể hiện số năm.
+                ref: "Câu 31 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft Excel 2016, công thức: =ROUND(123456.789,2) cho kết quả là gì?",
+                options: ["123500", "123456.79", "123456", "123457"],
+                correct: 1,
+                ref: "Câu 32 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft PowerPoint 2016, để tạo hiệu ứng chuyển tiếp slide, ta chọn thẻ nào?",
+                options: ["Transitions", "Animations", "Insert", "Design"],
+                correct: 0,
+                ref: "Câu 33 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft PowerPoint 2016, để thay đổi bố cục của một slide, ta thực hiện bằng cách nào sau đây?",
+                options: ["Chọn Insert | Layout", "Chọn Home | Layout", "Chọn View | Layout", "Nhấp trái chuột chọn Layout"],
+                correct: 1,
+                ref: "Câu 34 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft PowerPoint 2016, muốn sửa thiết kế của slide theo ý người sử dụng, ta thực hiện bằng cách nào sau đây?",
+                options: ["Chọn View | Slide Master", "Nhấp phải chuột chọn Slide Master", "Chọn Design | Slide Master", "Cả A và B đều đúng"],
+                correct: 0,
+                ref: "Câu 35 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Trong Microsoft PowerPoint 2016, nhóm các hiệu ứng màu xanh là thuộc loại nào?",
+                options: ["Nhóm hiệu ứng nổi bật", "Nhóm hiệu ứng xuất hiện", "Nhóm hiệu ứng theo đường chuyển động", "Nhóm hiệu ứng thoát"],
+                correct: 1,
+                ref: "Câu 36 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Mạng máy tính có các máy tính kết nối trong khu vực bán kính hẹp khoảng vài trăm mét (1 phòng học, 1 tầng tòa nhà, 1 tòa nhà...) gọi là gì?",
+                options: ["Mạng máy tính toàn cầu (GAN)", "Mạng máy tính diện rộng (WAN)", "Mạng máy tính cục bộ (LAN)", "Mạng intranet"],
+                correct: 2,
+                ref: "Câu 37 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Cấu trúc 1 địa chỉ email là gì?",
+                options: ["<Tên_người_dùng>@<Tên_miền>", "<Tên miền>@<Tên_người_dùng>", "<Tên_người_dùng>.<Tên_miền>", "<Tên_miền>.<Tên_người_dùng>"],
+                correct: 0,
+                ref: "Câu 38 (NOI DUNG ON THI)"
+            },
+            {
+                q: "Phát biểu nào sau đây về cấu trúc bảng tính Excel là sai?",
+                options: [
+                    "Các cột của trang tính được đánh thứ tự liên tiếp từ trái sang phải bằng các chữ cái bắt đầu từ A, B, C...",
+                    "Các hàng của trang tính được đánh thứ tự liên tiếp từ trên xuống bằng các số bắt đầu từ 1, 2, 3...",
+                    "Địa chỉ của một ô gồm tên dòng và tên cột, vd: 2A",
+                    "Khối là tập hợp các ô tính liền nhau tạo thành một vùng hình chữ nhật."
+                ],
+                correct: 2, // Phải là tên cột trước tên dòng (ví dụ: A2)
+                ref: "Câu 1 (DETHIMAU_EXCEL_2016)"
+            },
+            {
+                q: "Trong Microsoft Excel, để đổi tên một Sheet ta thực hiện cách nào?",
+                options: ["Chọn lệnh: Home \\ Format \\ Rename Sheet", "Click chuột vào tên Sheet cần đổi tên, sau đó chọn Rename", "Chọn lệnh: Data\\ Format \\ Rename Sheet", "Cả A và B đều đúng"],
+                correct: 3,
+                ref: "Câu 2 (DETHIMAU_EXCEL_2016)"
+            },
+            {
+                q: "Trong Microsoft Excel, nếu ta chọn ô A2 có sẵn giá trị dãy ký tự 'DongNai 3', sau sử dụng chức năng Fill Series, thì kết quả nhận được tại ô E2 là:",
+                options: ["DongNai 6", "DongNai 7", "DongNai 5", "DongNai 4"],
+                correct: 1, // Kéo từ dòng 2 từ cột A đến E là tăng 4 đơn vị: 3+4=7
+                ref: "Câu 3 (DETHIMAU_EXCEL_2016)"
+            }
+        ];
 
-        <section class="card settings">
-          <h2>Classifier mode</h2>
-          <label for="mode">Chế độ / Mode</label>
-          <select id="mode">
-            <option value="local">Local rule-based demo</option>
-            <option value="api">Model API endpoint</option>
-          </select>
-          <div class="api-settings" id="apiSettings">
-            <label for="endpoint">POST endpoint</label>
-            <input id="endpoint" type="url" value="http://localhost:5000/predict">
-          </div>
-          <div class="notice" id="notice">Local demo dùng luật từ khóa để thử giao diện ngay trên trình duyệt. Đây không phải kết quả từ mô hình LSTM, GRU hoặc SVM trong notebook.</div>
-        </section>
-      </aside>
-    </section>
-    <footer class="footer">API mode gửi JSON <code>{"text":"email content"}</code> và nhận <code>{"prediction":"spam","score":0.98}</code>.</footer>
-  </main>
+        // Xáo trộn ngẫu nhiên bộ câu hỏi để làm bài khách quan hơn
+        const questions = rawQuestions.sort(() => 0.5 - Math.random());
 
-  <script>
-    const examples = {
-      spam: `Congratulations! You are our lucky winner.
+        let score = 0;
+        let timeLeft = 0;
+        let timerInterval;
 
-You have won a FREE vacation and a $5,000 cash prize. Click here now to claim your reward. This limited offer expires today. Act now!`,
-      ham: `Hi team,
+        // Render toàn bộ đề thi lên trang web
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
 
-Please review the attached meeting notes before tomorrow's project call. We will discuss the delivery timeline and assign the remaining tasks.
+            document.getElementById('progress').innerText = `Tổng số câu hỏi: ${questions.length}`;
 
-Best regards,
-Minh`,
-      phishing: `URGENT: Your account has been suspended.
+            questions.forEach((qData, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.id = `q-card-${index}`;
 
-We detected unusual activity. Verify your account immediately by clicking the link below. Failure to confirm your password within 24 hours will result in account closure.`
-      ,
-      scamVi: `THÔNG BÁO KHẨN: Bạn đã trúng thưởng một phần quà trị giá 50.000.000 đồng.
+                const qText = document.createElement('div');
+                qText.className = 'question-text';
+                qText.innerText = `Câu ${index + 1}: ${qData.q}`;
+                card.appendChild(qText);
 
-Để nhận thưởng, vui lòng chuyển khoản phí vận chuyển và cung cấp mã OTP xác thực. Bấm vào liên kết ngay hôm nay, nếu không tài khoản sẽ bị khóa.`,
-      hamVi: `Chào cả nhóm,
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'options-container';
 
-Mình gửi biên bản cuộc họp chiều nay. Nhờ mọi người xem lại tiến độ dự án và cập nhật phần việc đang phụ trách trước 9 giờ sáng mai.
+                qData.options.forEach((opt, optIndex) => {
+                    const label = document.createElement('label');
+                    label.className = 'option-label';
+                    label.id = `label-${index}-${optIndex}`;
 
-Cảm ơn mọi người.`,
-      advancedEn: `Your loyalty gift is waiting. To receive the free reward, wire the shipping and processing fee in advance. Buy a gift card and send the code today. Keep this confidential or the offer will expire.`,
-      advancedVi: `Bạn được tặng quà tri ân trị giá 20.000.000 đồng. Để nhận quà, vui lòng chuyển tiền trước phí xử lý và phí vận chuyển. Giữ bí mật thông tin này và gửi ảnh biên lai ngay hôm nay.`,
-      jobVi: `Tuyển cộng tác viên online làm nhiệm vụ chốt đơn. Vui lòng nạp tiền trước để nhận hoa hồng cao và kết bạn Zalo ngay hôm nay.`,
-      safetyVi: `Bạn đã chuyển khoản 500.000 đồng thành công. Tuyệt đối không cung cấp mã OTP cho bất kỳ ai. Nếu cần hỗ trợ, vui lòng gọi tổng đài chính thức.`
-    };
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = `question-${index}`;
+                    input.value = optIndex;
 
-    const rules = [
-      [/\bfree\b/gi, "free", .12], [/\bwin(?:ner|ning)?\b/gi, "winner", .18],
-      [/\bprize\b/gi, "prize", .18], [/\bclaim\b/gi, "claim", .11],
-      [/\bclick (?:here|now|the link)\b/gi, "click link", .12],
-      [/\blimited offer\b/gi, "limited offer", .14], [/\bact now\b/gi, "act now", .14],
-      [/\burgent\b/gi, "urgent", .11], [/\bverify (?:your )?(?:account|password)\b/gi, "verify account", .17],
-      [/\bpassword\b/gi, "password", .08], [/\bsuspended\b/gi, "suspended", .11],
-      [/\bviagra\b/gi, "viagra", .28], [/\bcasino\b/gi, "casino", .20],
-      [/\bbitcoin\b|\bcrypto(?:currency|currencies)?\b|\busdt\b|\btether\b|\bethereum\b|\bwallet\b/gi, "crypto or wallet", .10], [/\bunsubscribe\b/gi, "unsubscribe", .05],
-      [/\$\s?\d[\d,.]*/g, "money amount", .08], [/https?:\/\/|www\./gi, "URL", .07],
+                    label.appendChild(input);
+                    label.appendChild(document.createTextNode(` ${String.fromCharCode(65 + optIndex)}. ${opt}`));
+                    optionsContainer.appendChild(label);
+                });
 
-      // Advanced English scam signals. Generic words receive modest weights;
-      // contextRules below assign stronger scores when suspicious signals co-occur.
-      [/\b(?:gift|reward|giveaway|bonus|loyalty gift|promotional gift)\b/gi, "gift or reward", .08],
-      [/\b(?:wire transfer|bank transfer|send money|transfer funds|remit payment)\b/gi, "money transfer", .08],
-      [/\b(?:pay|payment|fee|deposit).{0,30}(?:upfront|in advance|beforehand|first)\b|\b(?:upfront|advance).{0,15}(?:fee|payment|deposit)\b/gi, "upfront payment", .16],
-      [/\b(?:shipping|delivery|processing|handling|customs|clearance|insurance|release|activation|administration) fee\b/gi, "suspicious fee", .12],
-      [/\b(?:gift card|prepaid card|voucher|itunes card|steam card|google play card)\b/gi, "gift card payment", .17],
-      [/\b(?:send|share|provide|read).{0,20}(?:otp|verification code|security code|pin)\b/gi, "request verification code", .18],
-      [/\b(?:keep (?:this|it) confidential|do not tell anyone|do not contact the bank|keep it secret)\b/gi, "secrecy request", .16],
-      [/\b(?:safe account|secure account|temporary account).{0,25}(?:transfer|deposit|send)\b|\btransfer.{0,25}(?:safe account|secure account)\b/gi, "transfer to safe account", .20],
-      [/\b(?:guaranteed returns?|risk[- ]free profit|double your money|high returns?|passive income)\b/gi, "guaranteed profit", .14],
-      [/\b(?:task scam|complete tasks?|product optimization|boost orders?|earn commission|remote job)\b/gi, "job or task offer", .10],
-      [/\b(?:whatsapp|telegram|signal app)\b/gi, "external messaging app", .06],
-      [/\b(?:scan|open).{0,15}(?:qr|link)\b/gi, "scan QR or open link", .10],
-      [/\b(?:refund|rebate).{0,25}(?:claim|receive|process|fee)\b/gi, "refund lure", .10],
-      [/\b(?:ssn|social security number|passport|identity card|bank details)\b/gi, "personal information request", .11],
-      [/\b(?:crypto(?:currency)?|usdt|tether|bitcoin|wallet).{0,30}(?:balance|account|funds?|assets?|money)\b|\b(?:balance|funds?|assets?).{0,30}(?:usdt|crypto(?:currency)?|bitcoin|wallet)\b/gi, "crypto account balance", .16],
-      [/\b(?:login|security|account|wallet|instagram).{0,20}password\b|\bpassword\s*:/gi, "shared login password", .15],
-      [/\b(?:username|user name|login id|account id)\s*:/gi, "shared username", .09],
-      [/\b(?:seed phrase|recovery phrase|private key|secret key|wallet key)\b/gi, "wallet secret phrase", .26],
-      [/\b(?:inheritance|last resort|family affection|for the rest of your life|make you happy)\b/gi, "emotional crypto story", .09],
+                card.appendChild(optionsContainer);
 
-      // Vietnamese scam signals: accented and unaccented variants.
-      [/trúng thưởng|trung thuong|nhận thưởng|nhan thuong|giải thưởng|giai thuong/gi, "trúng thưởng", .20],
-      [/quà tặng|qua tang|nhận quà|nhan qua|tặng quà|tang qua|quà tri ân|qua tri an|quà miễn phí|qua mien phi/gi, "nhận quà", .09],
-      [/phí nhận thưởng|phi nhan thuong|phí vận chuyển|phi van chuyen|nộp phí|nop phi|phí xử lý|phi xu ly|phí mở khóa|phi mo khoa|phí bảo hiểm|phi bao hiem|phí hải quan|phi hai quan|phí giao hàng|phi giao hang/gi, "yêu cầu nộp phí", .17],
-      [/chuyển khoản|chuyen khoan/gi, "chuyển khoản", .06],
-      [/chuyển tiền trước|chuyen tien truoc|thanh toán trước|thanh toan truoc|đóng tiền trước|dong tien truoc|trả phí trước|tra phi truoc/gi, "chuyển tiền trước", .18],
-      [/(?:vui lòng|vui long|hãy|hay|yêu cầu|yeu cau).{0,60}(?:cung cấp|cung cap|gửi|gui|đọc|doc)\s+(?:mã otp|ma otp)|(?:gửi|gui|đọc|doc)\s+(?:mã otp|ma otp).{0,20}(?:ngay|cho|qua|vào|vao)/gi, "yêu cầu cung cấp OTP", .19],
-      [/mã otp|ma otp|mã xác thực|ma xac thuc/gi, "nhắc đến OTP", .05],
-      [/xác minh tài khoản|xac minh tai khoan|xác thực tài khoản|xac thuc tai khoan|đăng nhập ngay|dang nhap ngay/gi, "xác minh tài khoản", .16],
-      [/bấm vào (?:liên kết|link)|bam vao (?:lien ket|link)|nhấp vào (?:liên kết|link)|nhap vao (?:lien ket|link)|truy cập đường link|truy cap duong link/gi, "bấm vào liên kết", .12],
-      [/(?:tài khoản|tai khoan).{0,25}(?:bị khóa|bi khoa|tạm khóa|tam khoa)|khóa tài khoản|khoa tai khoan/gi, "đe dọa khóa tài khoản", .13],
-      [/khẩn cấp|khan cap|ngay lập tức|ngay lap tuc|ngay hôm nay|ngay hom nay/gi, "thúc ép khẩn cấp", .08],
-      [/công an|cong an|bộ công an|bo cong an|tòa án|toa an|viện kiểm sát|vien kiem sat/gi, "mạo danh cơ quan", .06],
-      [/vụ án|vu an|rửa tiền|rua tien|lệnh bắt|lenh bat|đang điều tra|dang dieu tra/gi, "đe dọa pháp lý", .15],
-      [/đầu tư|dau tu|lợi nhuận cao|loi nhuan cao|lãi suất cao|lai suat cao/gi, "đầu tư lợi nhuận cao", .10],
-      [/việc nhẹ lương cao|viec nhe luong cao|làm việc tại nhà|lam viec tai nha/gi, "việc làm đáng ngờ", .14],
-      [/nạp tiền|nap tien|đặt cọc|dat coc|ứng trước|ung truoc/gi, "yêu cầu nạp tiền", .12],
-      [/cccd|căn cước công dân|can cuoc cong dan|thông tin cá nhân|thong tin ca nhan/gi, "yêu cầu thông tin cá nhân", .10],
-      [/\btelegram\b|kết bạn zalo|ket ban zalo|liên hệ zalo|lien he zalo/gi, "liên hệ ngoài luồng", .07],
-      [/\d[\d.,]{4,}\s*(?:đồng|vnd|vnđ)/gi, "số tiền VND", .07],
-      [/giữ bí mật|giu bi mat|không được nói với ai|khong duoc noi voi ai|không liên hệ ngân hàng|khong lien he ngan hang/gi, "yêu cầu giữ bí mật", .16],
-      [/tài khoản an toàn|tai khoan an toan|tài khoản tạm giữ|tai khoan tam giu/gi, "tài khoản an toàn giả", .16],
-      [/quét mã qr|quet ma qr|quét qr|quet qr|gửi ảnh biên lai|gui anh bien lai/gi, "QR hoặc ảnh biên lai", .10],
-      [/làm nhiệm vụ|lam nhiem vu|nhận hoa hồng|nhan hoa hong|tối ưu đơn hàng|toi uu don hang|chốt đơn ảo|chot don ao/gi, "nhiệm vụ nhận hoa hồng", .14],
-      [/hoàn tiền|hoan tien|hoàn thuế|hoan thue|nhận lại tiền|nhan lai tien/gi, "mồi hoàn tiền", .09],
-      [/thẻ cào|the cao|mã thẻ|ma the|gift card|usdt/gi, "thanh toán khó truy vết", .15]
-    ];
+                const exp = document.createElement('div');
+                exp.className = 'explanation';
+                exp.id = `explanation-${index}`;
+                exp.innerText = `Nguồn tài liệu: ${qData.ref} | Đáp án đúng là mục tương ứng chữ đậm trong file ôn tập.`;
+                card.appendChild(exp);
 
-    const contextRules = [
-      {
-        patterns: [/(?:\bgift\b|\breward\b|\bprize\b|\bgiveaway\b|quà(?:\s+tặng)?|\bqua(?:\s+tang)?\b|trúng thưởng|\btrung thuong\b)/i, /(?:\bfee\b|\bdeposit\b|\bpay\b|\btransfer\b|\bwire\b|phí|\bphi\b|chuyển|\bchuyen\b|thanh toán|\bthanh toan\b)/i],
-        label: "gift + upfront fee / quà tặng + trả phí",
-        weight: .25
-      },
-      {
-        patterns: [/(?:transfer|wire|send money|chuyển khoản|chuyen khoan|chuyển tiền|chuyen tien|thanh toán|thanh toan)/i, /(?:upfront|in advance|before|first|trước|truoc|đặt cọc|dat coc|ứng trước|ung truoc)/i],
-        label: "upfront transfer / chuyển tiền trước",
-        weight: .22
-      },
-      {
-        patterns: [/(?:transfer|wire|send money|chuyển|chuyen|nạp tiền|nap tien)/i, /(?:secret|confidential|do not tell|giữ bí mật|giu bi mat|không được nói|khong duoc noi)/i],
-        label: "money + secrecy / tiền + giữ bí mật",
-        weight: .25
-      },
-      {
-        patterns: [/(?:\botp\b|\bverification code\b|\bsecurity code\b|\bpin\b|mã xác thực|\bma xac thuc\b)/i, /(?:\bsend\b|\bshare\b|\bprovide\b|\bread\b|gửi|\bgui\b|cung cấp|\bcung cap\b|đọc|\bdoc\b)/i],
-        label: "requested OTP or code / yêu cầu mã xác thực",
-        weight: .22
-      },
-      {
-        patterns: [/(?:account|bank|tài khoản|tai khoan|ngân hàng|ngan hang)/i, /(?:locked|suspended|closure|khóa|khoa|tạm khóa|tam khoa)/i, /(?:link|verify|login|liên kết|lien ket|xác minh|xac minh|đăng nhập|dang nhap)/i],
-        label: "account threat + link / dọa khóa tài khoản",
-        weight: .24
-      },
-      {
-        patterns: [/(?:job|task|commission|việc|viec|nhiệm vụ|nhiem vu|hoa hồng|hoa hong)/i, /(?:deposit|top up|pay|transfer|nạp tiền|nap tien|đặt cọc|dat coc|ứng trước|ung truoc)/i],
-        label: "job + deposit / việc làm + nạp tiền",
-        weight: .24
-      },
-      {
-        patterns: [/(?:police|court|investigation|công an|cong an|tòa án|toa an|điều tra|dieu tra|rửa tiền|rua tien)/i, /(?:transfer|deposit|safe account|chuyển|chuyen|nạp tiền|nap tien|tài khoản an toàn|tai khoan an toan)/i],
-        label: "authority impersonation + money / mạo danh + chuyển tiền",
-        weight: .27
-      },
-      {
-        patterns: [/(?:crypto(?:currency)?|usdt|tether|bitcoin|wallet)/i, /(?:balance|funds?|assets?|account)/i, /(?:password|seed phrase|private key|username|login)/i],
-        label: "crypto balance + credentials / ví crypto + thông tin đăng nhập",
-        weight: .34
-      },
-      {
-        patterns: [/(?:password|seed phrase|private key|username|login)/i, /(?:https?:\/\/|www\.|website\s*:)/i],
-        label: "credentials + website / thông tin đăng nhập + website",
-        weight: .20
-      },
-      {
-        patterns: [/(?:usdt|crypto(?:currency)?|bitcoin|wallet)/i, /(?:inheritance|family|separated|last resort|make you happy|rest of your life)/i],
-        label: "emotional crypto lure / câu chuyện cảm xúc + crypto",
-        weight: .17
-      }
-    ];
+                container.appendChild(card);
+            });
+        }
 
-    const safetyRules = [
-      {
-        pattern: /\b(?:never|do not|don't).{0,35}(?:share|send|provide|read).{0,25}(?:otp|verification code|security code|pin)\b/i,
-        label: "security notice: never share OTP",
-        weight: .38
-      },
-      {
-        pattern: /(?:không|khong|tuyệt đối không|tuyet doi khong).{0,35}(?:cung cấp|cung cap|gửi|gui|đọc|doc).{0,25}(?:mã otp|ma otp|mã xác thực|ma xac thuc)/i,
-        label: "cảnh báo: không cung cấp OTP",
-        weight: .38
-      },
-      {
-        pattern: /\b(?:no payment required|never ask.{0,30}(?:transfer|payment|fee)|do not transfer money)\b/i,
-        label: "security notice: no payment requested",
-        weight: .20
-      },
-      {
-        pattern: /(?:không yêu cầu|khong yeu cau).{0,35}(?:chuyển khoản|chuyen khoan|chuyển tiền|chuyen tien|nộp phí|nop phi|thanh toán|thanh toan)/i,
-        label: "cảnh báo: không yêu cầu chuyển tiền",
-        weight: .20
-      }
-    ];
+        // Tính toán thời gian làm bài
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft++;
+                const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+                const secs = String(timeLeft % 60).padStart(2, '0');
+                document.getElementById('timer').innerText = `Thời gian: ${mins}:${secs}`;
+            }, 1000);
+        }
 
-    const $ = id => document.getElementById(id);
-    const emailText = $("emailText");
+        // Chấm điểm bài thi và hiển thị đáp án, lời giải
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            score = 0;
 
-    function updateMeta() {
-      const text = emailText.value.trim();
-      $("wordCount").textContent = `${text ? text.split(/\s+/).length : 0} words`;
-      $("charCount").textContent = `${emailText.value.length} / 12000 characters`;
-    }
+            questions.forEach((qData, index) => {
+                const selected = document.querySelector(`input[name="question-${index}"]:checked`);
+                const explanation = document.getElementById(`explanation-${index}`);
+                explanation.style.display = 'block'; // Hiện lời giải thích nguồn câu hỏi
 
-    function localClassify(text) {
-      let score = .06;
-      const signals = [];
-      for (const [pattern, label, weight] of rules) {
-        const matches = text.match(pattern);
-        if (matches) { score += weight * Math.min(matches.length, 2); signals.push(label); }
-      }
-      for (const { patterns, label, weight } of contextRules) {
-        if (patterns.every(pattern => pattern.test(text))) { score += weight; signals.push(label); }
-      }
-      for (const { pattern, label, weight } of safetyRules) {
-        if (pattern.test(text)) { score -= weight; signals.push(label); }
-      }
-      if ((text.match(/\b[A-Z]{4,}\b/g) || []).length >= 2) { score += .08; signals.push("uppercase emphasis"); }
-      const exclamations = (text.match(/!/g) || []).length;
-      if (exclamations >= 2) { score += Math.min(.12, exclamations * .025); signals.push("many exclamation marks"); }
-      score = Math.max(.01, Math.min(.99, score));
-      return { prediction: score >= .5 ? "spam" : "ham", score, signals: [...new Set(signals)] };
-    }
+                // Tô màu đáp án đúng gốc
+                const correctLabel = document.getElementById(`label-${index}-${qData.correct}`);
+                if (correctLabel) correctLabel.classList.add('correct');
 
-    async function apiClassify(text) {
-      const response = await fetch($("endpoint").value.trim(), {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text })
-      });
-      if (!response.ok) throw new Error(`API returned HTTP ${response.status}`);
-      const data = await response.json();
-      const rawLabel = String(data.prediction ?? data.label ?? data.class).toLowerCase();
-      const score = Number(data.score ?? data.probability ?? data.spam_probability);
-      if (!["spam", "ham", "0", "1"].includes(rawLabel) || Number.isNaN(score)) throw new Error("API response must contain prediction and score.");
-      return { prediction: rawLabel === "1" ? "spam" : rawLabel === "0" ? "ham" : rawLabel, score: Math.max(0, Math.min(1, score)), signals: data.signals || ["Response from trained model API"] };
-    }
+                if (selected) {
+                    const userAns = parseInt(selected.value);
+                    if (userAns === qData.correct) {
+                        score++;
+                    } else {
+                        // Nếu chọn sai thì tô màu đỏ vị trí click sai
+                        const incorrectLabel = document.getElementById(`label-${index}-${userAns}`);
+                        if (incorrectLabel) incorrectLabel.classList.add('incorrect');
+                    }
+                }
+            });
 
-    function render(result) {
-      const isSpam = result.prediction === "spam";
-      $("resultCard").classList.toggle("spam", isSpam);
-      $("resultLabel").textContent = isSpam ? "Spam" : "Ham";
-      $("caption").textContent = isSpam ? "Email có dấu hiệu spam. Hãy kiểm tra kỹ trước khi mở liên kết." : "Không phát hiện đủ tín hiệu spam. Vẫn nên kiểm tra nếu email có nội dung bất thường.";
-      const percent = Math.round(result.score * 100);
-      $("score").textContent = `${percent}%`;
-      $("meter").style.width = `${Math.max(3, percent)}%`;
-      $("signals").innerHTML = "";
-      if (!result.signals.length) {
-        $("signals").innerHTML = `<span class="empty">Không phát hiện từ khóa đáng chú ý / No notable keyword detected.</span>`;
-      } else {
-        result.signals.forEach(text => {
-          const node = document.createElement("span");
-          node.className = "signal"; node.textContent = text; $("signals").appendChild(node);
-        });
-      }
-    }
+            // Hiện bảng kết quả lên màn hình
+            document.getElementById('result-box').style.display = 'block';
+            document.getElementById('score-text').innerText = `${score} / ${questions.length} Câu`;
 
-    async function classify() {
-      const text = emailText.value.trim();
-      $("error").classList.remove("visible");
-      if (!text) { $("error").textContent = "Vui lòng nhập nội dung email trước khi phân loại."; $("error").classList.add("visible"); return emailText.focus(); }
-      $("classifyButton").disabled = true; $("classifyButton").textContent = "Classifying...";
-      try { render($("mode").value === "api" ? await apiClassify(text) : localClassify(text)); }
-      catch (error) { $("error").textContent = `Không thể phân loại: ${error.message}`; $("error").classList.add("visible"); }
-      finally { $("classifyButton").disabled = false; $("classifyButton").textContent = "Classify email"; }
-    }
+            const percentage = (score / questions.length) * 100;
+            let feedback = "";
+            if (percentage >= 80) feedback = "Xuất sắc! Bạn đã nắm rất vững kiến thức lý thuyết văn phòng. 🎉";
+            else if (percentage >= 50) feedback = "Đạt yêu cầu! Hãy cuộn xuống rà soát lại các câu sai màu đỏ nhé. 👍";
+            else feedback = "Cần ôn tập kỹ lại! Hãy xem lại các câu có highlight xanh để ghi nhớ phím tắt và câu lệnh. 📑";
 
-    $("mode").addEventListener("change", () => {
-      const api = $("mode").value === "api";
-      $("apiSettings").classList.toggle("visible", api);
-      $("modeStatus").textContent = api ? "API mode active" : "Local demo active";
-      $("notice").textContent = api ? "API mode gọi mô hình của bạn qua HTTP POST. Nếu mở file trực tiếp, backend cần cho phép CORS." : "Local demo dùng luật từ khóa để thử giao diện ngay trên trình duyệt. Đây không phải kết quả từ mô hình LSTM, GRU hoặc SVM trong notebook.";
-    });
-    document.querySelectorAll("[data-example]").forEach(button => button.addEventListener("click", () => { emailText.value = examples[button.dataset.example]; updateMeta(); classify(); }));
-    emailText.addEventListener("input", updateMeta);
-    emailText.addEventListener("keydown", event => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") classify(); });
-    $("classifyButton").addEventListener("click", classify);
-    $("clearButton").addEventListener("click", () => { emailText.value = ""; updateMeta(); $("error").classList.remove("visible"); emailText.focus(); });
-    updateMeta();
-  </script>
+            document.getElementById('feedback-text').innerText = feedback;
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        // Khởi tạo ứng dụng khi load xong trang
+        window.onload = function () {
+            renderQuiz();
+            startTimer();
+        };
+    </script>
+
 </body>
+
 </html>
