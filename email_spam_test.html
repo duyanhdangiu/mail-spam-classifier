@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Ôn Thi Tin Học Văn Phòng 2016</title>
+    <title>Quiz Ôn Thi Tin Học Văn Phòng 2016 - Đầy Đủ 60 Câu</title>
     <style>
         :root {
             --primary-color: #2b6cb0;
@@ -87,7 +87,6 @@
             transform: scale(1.2);
         }
 
-        /* State Styles */
         .correct {
             background-color: #c6f6d5 !important;
             border-color: var(--success-color) !important;
@@ -124,7 +123,7 @@
         }
 
         .btn:hover {
-            background: #2b6cb0;
+            background: #234e7a;
         }
 
         .result-box {
@@ -147,15 +146,14 @@
 <body>
 
     <div class="container">
-        <h1>THI THỬ: TRẮC NGHIỆM TIN HỌC VĂN PHÒNG</h1>
+        <h1>BỘ QUIZ ÔN THI TIN HỌC VĂN PHÒNG ĐẦY ĐỦ 60 CÂU</h1>
 
         <div class="quiz-info">
             <span id="progress">Câu hỏi: 0 / 0</span>
             <span id="timer">Thời gian: 00:00</span>
         </div>
 
-        <div id="quiz-container">
-        </div>
+        <div id="quiz-container"></div>
 
         <button id="submit-btn" class="btn" onclick="showResults()" style="display: none;">Kết Thúc Sớm</button>
 
@@ -163,262 +161,79 @@
             <h2>Kết Quả Làm Bài</h2>
             <div class="result-score" id="score-text">0 / 0</div>
             <p id="feedback-text"></p>
-            <button class="btn" onclick="window.location.reload()" style="background: #4a5568;">Làm lại test
+            <button class="btn" onclick="window.location.reload()" style="background: #4a5568;">Làm lại bài test
                 mới</button>
         </div>
     </div>
 
     <script>
-        // Dữ liệu câu hỏi trích xuất trực tiếp từ các file docx của bạn
-        // Các đáp án đúng (tô đậm trong đề) được cấu hình chính xác
         const rawQuestions = [
-            {
-                q: "Khi nói về bộ nhớ RAM của máy tính, phát biểu nào sau đây là đúng?",
-                options: ["Là bộ nhớ truy xuất ngẫu nhiên", "Là bộ nhớ chỉ đọc", "Là bộ nhớ chỉ xử lý ký tự", "Là bộ nhớ chỉ xử lý hình ảnh"],
-                correct: 0,
-                ref: "Câu 1 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Thiết bị nào sau đây của máy tính không thuộc nhóm thiết bị xuất?",
-                options: ["Màn hình (Monitor)", "Máy in (Printer)", "Loa (Speaker)", "Máy quét (Scanner)"],
-                correct: 3,
-                ref: "Câu 2 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong máy tính, thiết bị nào là thiết bị lưu trữ dữ liệu lâu dài (kể cả khi tắt nguồn)?",
-                options: ["Bàn phím", "RAM", "Đĩa cứng", "Microphone"],
-                correct: 2,
-                ref: "Câu 3 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Phần mềm nào dưới đây không phải là phần mềm hệ thống?",
-                options: ["MS-DOS", "Linux", "Microsoft Windows", "Microsoft Excel"],
-                correct: 3,
-                ref: "Câu 4 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Phím nào trên bàn phím dùng để chuyển qua lại giữa chế độ gõ chữ in hoa và chữ thường?",
-                options: ["Caps lock", "Ctrl", "Alt", "Tab"],
-                correct: 0,
-                ref: "Câu 5 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Hệ điều hành Windows 10 là hệ điều hành có:",
-                options: ["Giao diện đồ hoạ", "Màn hình động", "Đa nhiệm", "Tất cả đều đúng"],
-                correct: 3,
-                ref: "Câu 6 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Thao tác nào sau đây dược dùng để chọn nhiều đối tượng không liên tiếp nhau trong hệ điều hành Windows 10?",
-                options: ["Nhấn giữ phím Ctrl và Click chuột vào từng đối tượng.", "Nhấn giữ phím Shift và Click chuột vào từng đối tượng.", "Click chuột phải tại từng đối tượng.", "Click chuột vào từng đối tượng."],
-                correct: 0,
-                ref: "Câu 7 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong hệ điều hành Windows 10, phát biểu nào không đúng?",
-                options: ["Folder có thể chứa các Folder con khác.", "Folder có thể chứa các File và Folder con khác.", "File có thể chứa File", "File dùng để lưu trữ dữ liệu."],
-                correct: 2,
-                ref: "Câu 8 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Windows 10, màn hình Desktop gồm những thành phần nào?",
-                options: ["Nút Start và thanh tác vụ (Taskbar)", "Các biểu tượng (Icons)", "Màn hình nền (Desktop)", "Tất cả đều đúng"],
-                correct: 3,
-                ref: "Câu 9 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong một cửa sổ Windows, nút Maximize trên thanh tiêu đề có chức năng gì?",
-                options: ["Phóng to cửa sổ đầy màn hình", "Phục hồi kích thước cửa sổ như trước đó", "Đóng cửa sổ", "Thu nhỏ cửa sổ thành cực tiểu"],
-                correct: 0,
-                ref: "Câu 10 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Word 2016, mặc định tài liệu được lưu với phần mở rộng là gì?",
-                options: [".dotx", ".doc", ".exe", ".docx"],
-                correct: 3,
-                ref: "Câu 12 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Word 2016, để trình bày văn bản với phông chữ VNI-Times thì phải chọn bảng mã nào trên bộ gõ (Unikey)?",
-                options: ["TCVN3 (ABC)", "VNI Windows", "Bảng mã khác", "Unicode"],
-                correct: 1,
-                ref: "Câu 13 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Word 2016, để tạo mới một tập tin văn bản ta sử dụng lệnh nào?",
-                options: ["File | New", "File | Open", "File | Print", "File | Close"],
-                correct: 0,
-                ref: "Câu 14 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Word 2016, chức năng Save As có tác dụng gì?",
-                options: ["Tạo ra một văn bản mới.", "Tạo ra một bản sao khác.", "Lưu những thay đổi của văn bản đang mở.", "Mở một văn bản cũ."],
-                correct: 1,
-                ref: "Câu 15 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Word 2016, tổ hợp phím nào để hủy bỏ thao tác vừa chọn?",
-                options: ["Ctrl +Y", "Ctrl + Z", "Ctrl + L", "Ctrl + T"],
-                correct: 1,
-                ref: "Câu 16 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Word 2016, thẻ Insert chứa các nhóm chức năng nào?",
-                options: [
-                    "Định dạng font chữ, định dạng đoạn, tìm và sửa lỗi sai",
-                    "Định dạng font chữ, chèn các ký tự đặc biệt và công thức toán, chèn liên kết",
-                    "Chèn liên kết, chèn bảng biểu, chèn các ký tự đặc biệt và công thức toán học",
-                    "Định dạng trang, phóng to/thu nhỏ cửa sổ"
-                ],
-                correct: 2,
-                ref: "Câu 17 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Word 2016, để chia cột ta chọn lệnh nào sau đây?",
-                options: ["Page Layout | Setup", "Page Layout | Columns", "Insert | Columns", "Page Layout | Margin"],
-                correct: 1,
-                ref: "Câu 18 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong MS Word 2016, lệnh Home | Format Painter có tác dụng gì?",
-                options: ["Sao chép nội dung của khối văn bản", "Sao chép định dạng của khối văn bản", "Sao chép cả nội dung và định dạng của khối văn bản", "Cả ba câu trên đều sai"],
-                correct: 1,
-                ref: "Câu 19 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Word 2016, để in từ trang 3 đến trang 8, người ta thực hiện lệnh nào sau đây?",
-                options: ["File | Print | tại ô Pages nhập 3.8", "File | Print | tại ô Pages nhập 3-8", "File | Print | tại ô Pages nhập 3,8", "File | Print | tại ô Pages nhập 3|8"],
-                correct: 1,
-                ref: "Câu 20 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Word 2016, tổ hợp phím Ctrl+E có tác dụng gì?",
-                options: ["Căn trái đoạn văn bản", "Căn phải đoạn văn bản", "Căn giữa đoạn văn bản", "Căn đều đoạn văn bản"],
-                correct: 2,
-                ref: "Câu 21 (NOI DUNG ON THI)"
-            },
-            {
-                q: "In Microsoft Excel 2016, nếu ta chọn ô A1 có sẵn giá trị dãy ký tự 'DongNai 3', sau sử dụng chức năng Autofill , thì kết quả nhận được tại ô G1 là:",
-                options: ["DongNai 8", "DongNai 9", "DongNai 10", "DongNai 11"],
-                correct: 1, // Kéo từ A đến G là tăng thêm 6 đơn vị: 3 + 6 = 9
-                ref: "Câu 23 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Excel 2016, công thức nào tính giá trị trung bình từ ô C3 đến ô C12?",
-                options: ["=SUM(C3:C12)", "=AVERAGE(C3,C12)", "=AVERAGE(C3+C12)", "=AVERAGE(C3:C12)"],
-                correct: 3,
-                ref: "Câu 24 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Excel 2016, khi nhập dữ liệu loại số vào trong ô, ô đó xuất hiện dạng ###### hoặc dạng số khoa học (Scientific) thì ta phải làm gì?",
-                options: ["Xóa đi nhập lại", "Thay đổi kiểu dữ liệu", "Thay đổi độ rộng cột", "Sai ở chỗ khác"],
-                correct: 2,
-                ref: "Câu 25 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Excel 2016, để xuống dòng trong cùng một ô, ta nhấn tổ hợp phím nào?",
-                options: ["Ctrl +Shift+ Enter", "Alt + Enter", "Ctrl +Enter", "Shift + Enter"],
-                correct: 1,
-                ref: "Câu 26 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Dựa vào thông tin cột Loại hình ảnh ví dụ câu 27 Excel, công thức điền cho ô Phụ Cấp E2 là:",
-                options: ["=HLOOKUP(C2,$C$11:$E$12,1,0)", "=HLOOKUP(C2,$C$11:$E$12,2,0)", "=VLOOKUP(C2,$C$11:$E$12,1,0)", "Tất cả đều sai"],
-                correct: 1,
-                ref: "Câu 27 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Excel 2016, công thức: =10/0 cho kết quả là gì?",
-                options: ["0", "10", "#VALUE!", "#DIV/0!"],
-                correct: 3,
-                ref: "Câu 28 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Excel 2016, hàm nào sau đây cho phép tính tổng các giá trị kiểu số thỏa mãn một điều kiện cho trước?",
-                options: ["SUM", "COUNTIF", "SUMIF", "COUNT"],
-                correct: 2,
-                ref: "Câu 29 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Excel 2016, công thức =IF(B5>B6,B5,B6) với B5=10, B6=20 cho kết quả là gì?",
-                options: ["10", "20", "30", "B6"],
-                correct: 1,
-                ref: "Câu 30 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong MS Excel 2016, công thức: =RIGHT('EXCEL2016',4) cho kết quả là:",
-                options: ["Một kiểu dữ liệu dạng số", "Một kiểu dữ liệu dạng chuỗi", "Một kiểu dữ liệu dạng năm", "Cả B và C đều đúng"],
-                correct: 3, // Hàm cắt chuỗi text cho kết quả dạng chuỗi "2016", đồng thời thể hiện số năm.
-                ref: "Câu 31 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft Excel 2016, công thức: =ROUND(123456.789,2) cho kết quả là gì?",
-                options: ["123500", "123456.79", "123456", "123457"],
-                correct: 1,
-                ref: "Câu 32 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft PowerPoint 2016, để tạo hiệu ứng chuyển tiếp slide, ta chọn thẻ nào?",
-                options: ["Transitions", "Animations", "Insert", "Design"],
-                correct: 0,
-                ref: "Câu 33 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft PowerPoint 2016, để thay đổi bố cục của một slide, ta thực hiện bằng cách nào sau đây?",
-                options: ["Chọn Insert | Layout", "Chọn Home | Layout", "Chọn View | Layout", "Nhấp trái chuột chọn Layout"],
-                correct: 1,
-                ref: "Câu 34 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft PowerPoint 2016, muốn sửa thiết kế của slide theo ý người sử dụng, ta thực hiện bằng cách nào sau đây?",
-                options: ["Chọn View | Slide Master", "Nhấp phải chuột chọn Slide Master", "Chọn Design | Slide Master", "Cả A và B đều đúng"],
-                correct: 0,
-                ref: "Câu 35 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Trong Microsoft PowerPoint 2016, nhóm các hiệu ứng màu xanh là thuộc loại nào?",
-                options: ["Nhóm hiệu ứng nổi bật", "Nhóm hiệu ứng xuất hiện", "Nhóm hiệu ứng theo đường chuyển động", "Nhóm hiệu ứng thoát"],
-                correct: 1,
-                ref: "Câu 36 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Mạng máy tính có các máy tính kết nối trong khu vực bán kính hẹp khoảng vài trăm mét (1 phòng học, 1 tầng tòa nhà, 1 tòa nhà...) gọi là gì?",
-                options: ["Mạng máy tính toàn cầu (GAN)", "Mạng máy tính diện rộng (WAN)", "Mạng máy tính cục bộ (LAN)", "Mạng intranet"],
-                correct: 2,
-                ref: "Câu 37 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Cấu trúc 1 địa chỉ email là gì?",
-                options: ["<Tên_người_dùng>@<Tên_miền>", "<Tên miền>@<Tên_người_dùng>", "<Tên_người_dùng>.<Tên_miền>", "<Tên_miền>.<Tên_người_dùng>"],
-                correct: 0,
-                ref: "Câu 38 (NOI DUNG ON THI)"
-            },
-            {
-                q: "Phát biểu nào sau đây về cấu trúc bảng tính Excel là sai?",
-                options: [
-                    "Các cột của trang tính được đánh thứ tự liên tiếp từ trái sang phải bằng các chữ cái bắt đầu từ A, B, C...",
-                    "Các hàng của trang tính được đánh thứ tự liên tiếp từ trên xuống bằng các số bắt đầu từ 1, 2, 3...",
-                    "Địa chỉ của một ô gồm tên dòng và tên cột, vd: 2A",
-                    "Khối là tập hợp các ô tính liền nhau tạo thành một vùng hình chữ nhật."
-                ],
-                correct: 2, // Phải là tên cột trước tên dòng (ví dụ: A2)
-                ref: "Câu 1 (DETHIMAU_EXCEL_2016)"
-            },
-            {
-                q: "Trong Microsoft Excel, để đổi tên một Sheet ta thực hiện cách nào?",
-                options: ["Chọn lệnh: Home \\ Format \\ Rename Sheet", "Click chuột vào tên Sheet cần đổi tên, sau đó chọn Rename", "Chọn lệnh: Data\\ Format \\ Rename Sheet", "Cả A và B đều đúng"],
-                correct: 3,
-                ref: "Câu 2 (DETHIMAU_EXCEL_2016)"
-            },
-            {
-                q: "Trong Microsoft Excel, nếu ta chọn ô A2 có sẵn giá trị dãy ký tự 'DongNai 3', sau sử dụng chức năng Fill Series, thì kết quả nhận được tại ô E2 là:",
-                options: ["DongNai 6", "DongNai 7", "DongNai 5", "DongNai 4"],
-                correct: 1, // Kéo từ dòng 2 từ cột A đến E là tăng 4 đơn vị: 3+4=7
-                ref: "Câu 3 (DETHIMAU_EXCEL_2016)"
-            }
+            // --- FILE 1: NOI DUNG ON THI ---
+            { q: "Khi nói về bộ nhớ RAM của máy tính, phát biểu nào sau đây là đúng?", options: ["Là bộ nhớ truy xuất ngẫu nhiên", "Là bộ nhớ chỉ đọc", "Là bộ nhớ chỉ xử lý ký tự", "Là bộ nhớ chỉ xử lý hình ảnh"], correct: 0, ref: "Câu 1" },
+            { q: "Thiết bị nào sau đây của máy tính không thuộc nhóm thiết bị xuất?", options: ["Màn hình (Monitor)", "Máy in (Printer)", "Loa (Speaker)", "Máy quét (Scanner)"], correct: 3, ref: "Câu 2" },
+            { q: "Trong máy tính, thiết bị nào là thiết bị lưu trữ dữ liệu lâu dài (kể cả khi tắt nguồn)?", options: ["Bàn phím", "RAM", "Đĩa cứng", "Microphone"], correct: 2, ref: "Câu 3" },
+            { q: "Phần mềm nào dưới đây không phải là phần mềm hệ thống?", options: ["MS-DOS", "Linux", "Microsoft Windows", "Microsoft Excel"], correct: 3, ref: "Câu 4" },
+            { q: "Phím nào trên bàn phím dùng để chuyển qua lại giữa chế độ gõ chữ in hoa và chữ thường?", options: ["Caps lock", "Ctrl", "Alt", "Tab"], correct: 0, ref: "Câu 5" },
+            { q: "Hệ điều hành Windows 10 là hệ điều hành có:", options: ["Giao diện đồ hoạ", "Màn hình động", "Đa nhiệm", "Tất cả đều đúng"], correct: 3, ref: "Câu 6" },
+            { q: "Thao tác nào sau đây dược dùng để chọn nhiều đối tượng không liên tiếp nhau trong hệ điều hành Windows 10?", options: ["Nhấn giữ phím Ctrl và Click chuột vào từng đối tượng.", "Nhấn giữ phím Shift và Click chuột vào từng đối tượng.", "Click chuột phải tại từng đối tượng.", "Click chuột vào từng đối tượng."], correct: 0, ref: "Câu 7" },
+            { q: "Trong hệ điều hành Windows 10, phát biểu nào không đúng?", options: ["Folder có thể chứa các Folder con khác.", "Folder có thể chứa các File và Folder con khác.", "File có thể chứa File", "File dùng để lưu trữ dữ liệu."], correct: 2, ref: "Câu 8" },
+            { q: "Trong Windows 10, màn hình Desktop gồm những thành phần nào?", options: ["Nút Start và thanh tác vụ (Taskbar)", "Các biểu tượng (Icons)", "Màn hình nền (Desktop)", "Tất cả đều đúng"], correct: 3, ref: "Câu 9" },
+            { q: "Trong một cửa sổ Windows, nút Maximize trên thanh tiêu đề có chức năng gì?", options: ["Phóng to cửa sổ đầy màn hình", "Phục hồi kích thước cửa sổ như trước đó", "Đóng cửa sổ", "Thu nhỏ cửa sổ thành cực tiểu"], correct: 0, ref: "Câu 10" },
+            { q: "Trong Windows 10, muốn thay đổi các thông số khu vực như múi giờ, đơn vị tiền tệ, cách viết số, ... ta sử dụng chương trình nào?", options: ["Microsoft Paint", "Control Panel", "System Tools", "Caculator"], correct: 1, ref: "Câu 11" },
+            { q: "Trong Microsoft Word 2016, mặc định tài liệu được lưu với phần mở rộng là gì?", options: [".dotx", ".doc", ".exe", ".docx"], correct: 3, ref: "Câu 12" },
+            { q: "Trong Microsoft Word 2016, để trình bày văn bản với phông chữ VNI-Times thì phải chọn bảng mã nào trên bộ gõ (Unikey)?", options: ["TCVN3 (ABC)", "VNI Windows", "Bảng mã khác", "Unicode"], correct: 1, ref: "Câu 13" },
+            { q: "Trong Microsoft Word 2016, để tạo mới một tập tin văn bản ta sử dụng lệnh nào?", options: ["File | New", "File | Open", "File | Print", "File | Close"], correct: 0, ref: "Câu 14" },
+            { q: "Trong Microsoft Word 2016, chức năng Save As có tác dụng gì?", options: ["Tạo ra một văn bản mới.", "Tạo ra một bản sao khác.", "Lưu những thay đổi của văn bản đang mở.", "Mở một văn bản cũ."], correct: 1, ref: "Câu 15" },
+            { q: "Trong Microsoft Word 2016, tổ hợp phím nào để hủy bỏ thao tác vừa chọn?", options: ["Ctrl +Y", "Ctrl + Z", "Ctrl + L", "Ctrl + T"], correct: 1, ref: "Câu 16" },
+            { q: "Trong Microsoft Word 2016, thẻ Insert chứa các nhóm chức năng nào?", options: ["Định dạng font chữ, định dạng đoạn, tìm và sửa lỗi sai", "Định dạng font chữ, chèn các ký tự đặc biệt và công thức toán, chèn liên kết", "Chèn liên kết, chèn bảng biểu, chèn các ký tự đặc biệt và công thức toán học", "Định dạng trang, phóng to/thu nhỏ cửa sổ"], correct: 2, ref: "Câu 17" },
+            { q: "Trong Microsoft Word 2016, để chia cột ta chọn lệnh nào sau đây?", options: ["Page Layout | Setup", "Page Layout | Columns", "Insert | Columns", "Page Layout | Margin"], correct: 1, ref: "Câu 18" },
+            { q: "Trong MS Word 2016, lệnh Home | Format Painter có tác dụng gì?", options: ["Sao chép nội dung của khối văn bản", "Sao chép định dạng của khối văn bản", "Sao chép cả nội dung và định dạng của khối văn bản", "Cả ba câu trên đều sai"], correct: 1, ref: "Câu 19" },
+            { q: "Trong Microsoft Word 2016, để in từ trang 3 đến trang 8, người ta thực hiện lệnh nào?", options: ["File | Print | tại ô Pages nhập 3.8", "File | Print | tại ô Pages nhập 3-8", "File | Print | tại ô Pages nhập 3,8", "File | Print | tại ô Pages nhập 3|8"], correct: 1, ref: "Câu 20" },
+            { q: "Trong Microsoft Word 2016, tổ hợp phím Ctrl+E có tác dụng gì?", options: ["Căn trái đoạn văn bản", "Căn phải đoạn văn bản", "Căn giữa đoạn văn bản", "Căn đều đoạn văn bản"], correct: 2, ref: "Câu 21" },
+            { q: "Trong Microsoft Word 2016, để lưu văn bản, người ta sử dụng tổ hợp phím nào sau đây?", options: ["Ctrl + O", "Ctrl + P", "Ctrl + N", "Ctrl + S"], correct: 3, ref: "Câu 22" },
+            { q: "Trong Microsoft Excel 2016, nếu chọn ô A1 có sẵn giá trị 'DongNai 3', sử dụng Autofill thì kết quả tại G1 là:", options: ["DongNai 8", "DongNai 9", "DongNai 10", "DongNai 11"], correct: 1, ref: "Câu 23" },
+            { q: "Trong Microsoft Excel 2016, công thức nào tính giá trị trung bình từ ô C3 đến ô C12?", options: ["=SUM(C3:C12)", "=AVERAGE(C3,C12)", "=AVERAGE(C3+C12)", "=AVERAGE(C3:C12)"], correct: 3, ref: "Câu 24" },
+            { q: "Trong Microsoft Excel 2016, khi ô xuất hiện dạng ###### hoặc dạng số khoa học (Scientific) thì ta phải làm gì?", options: ["Xóa đi nhập lại", "Thay đổi kiểu dữ liệu", "Thay đổi độ rộng cột", "Sai ở chỗ khác"], correct: 2, ref: "Câu 25" },
+            { q: "Trong Microsoft Excel 2016, để xuống dòng trong cùng một ô, ta nhấn tổ hợp phím nào?", options: ["Ctrl +Shift+ Enter", "Alt + Enter", "Ctrl +Enter", "Shift + Enter"], correct: 1, ref: "Câu 26" },
+            { q: "Dựa vào cột Loại để điền thông tin cho Phụ cấp, công thức cho ô E2 là:", options: ["=HLOOKUP(C2,$C$11:$E$12,1,0)", "=HLOOKUP(C2,$C$11:$E$12,2,0)", "=VLOOKUP(C2,$C$11:$E$12,1,0)", "Tất cả đều sai"], correct: 1, ref: "Câu 27" },
+            { q: "Trong Microsoft Excel 2016, công thức: =10/0 cho kết quả là gì?", options: ["0", "10", "#VALUE!", "#DIV/0!"], correct: 3, ref: "Câu 28" },
+            { q: "Trong Microsoft Excel 2016, hàm nào cho phép tính tổng các giá trị kiểu số thỏa mãn một điều kiện?", options: ["SUM", "COUNTIF", "SUMIF", "COUNT"], correct: 2, ref: "Câu 29" },
+            { q: "Trong Microsoft Excel 2016, công thức =IF(B5>B6,B5,B6) với B5=10, B6=20 cho kết quả là:", options: ["10", "20", "30", "B6"], correct: 1, ref: "Câu 30" },
+            { q: "Trong MS Excel 2016, công thức: =RIGHT('EXCEL2016',4) cho kết quả là:", options: ["Một kiểu dữ liệu dạng số", "Một kiểu dữ liệu dạng chuỗi", "Một kiểu dữ liệu dạng năm", "Cả B và C đều đúng"], correct: 3, ref: "Câu 31" },
+            { q: "Trong Microsoft Excel 2016, công thức: =ROUND(123456.789,2) cho kết quả là gì?", options: ["123500", "123456.79", "123456", "123457"], correct: 1, ref: "Câu 32" },
+            { q: "Trong Microsoft PowerPoint 2016, để tạo hiệu ứng chuyển tiếp slide, ta chọn thẻ nào?", options: ["Transitions", "Animations", "Insert", "Design"], correct: 0, ref: "Câu 33" },
+            { q: "Trong Microsoft PowerPoint 2016, để thay đổi bố cục của một slide, ta thực hiện bằng cách nào?", options: ["Chọn Insert | Layout", "Chọn Home | Layout", "Chọn View | Layout", "Nhấp trái chuột chọn Layout"], correct: 1, ref: "Câu 34" },
+            { q: "Trong Microsoft PowerPoint 2016, muốn sửa thiết kế của slide theo ý người sử dụng, ta chọn lệnh nào?", options: ["Chọn View | Slide Master", "Nhấp phải chuột chọn Slide Master", "Chọn Design | Slide Master", "Cả A và B đều đúng"], correct: 0, ref: "Câu 35" },
+            { q: "Trong Microsoft PowerPoint 2016, nhóm các hiệu ứng màu xanh thuộc loại nào?", options: ["Nhóm hiệu ứng nổi bật", "Nhóm hiệu ứng xuất hiện", "Nhóm hiệu ứng theo đường chuyển động", "Nhóm hiệu ứng thoát"], correct: 1, ref: "Câu 36" },
+            { q: "Mạng máy tính kết nối trong khu vực bán kính hẹp khoảng vài trăm mét (1 phòng học, 1 tòa nhà...) gọi là gì?", options: ["Mạng máy tính toàn cầu (GAN)", "Mạng máy tính diện rộng (WAN)", "Mạng máy tính cục bộ (LAN)", "Mạng intranet"], correct: 2, ref: "Câu 37" },
+            { q: "Cấu trúc 1 địa chỉ email là gì?", options: ["<Tên_người_dùng>@<Tên_miền>", "<Tên miền>@<Tên_người_dùng>", "<Tên_người_dùng>.<Tên_miền>", "<Tên_miền>.<Tên_người_dùng>"], correct: 0, ref: "Câu 38" },
+            { q: "MS Office 2016 bao gồm các phần mềm nào?", options: ["MS Word 2016", "MS PowerPoint 2016", "MS Excel 2016", "Cả ba câu trên đều đúng"], correct: 3, ref: "Câu 39" },
+            { q: "Nút Back trên các trình duyệt web có chức năng gì?", options: ["Duyệt trang web tiếp theo", "Duyệt lại trang web đang mở", "Duyệt màn hình trước đó", "Duyệt lại trang web trước đó"], correct: 3, ref: "Câu 40" },
+
+            // --- FILE 2: DETHIMAU_EXCEL_2016 ---
+            { q: "Trong Microsoft Excel, phát biểu nào sau đây về địa chỉ ô và khối là sai?", options: ["Các cột được đánh chữ cái liên tiếp từ A, B, C...", "Các hàng được đánh số liên tiếp từ 1, 2, 3...", "Địa chỉ của một ô gồm tên dòng và tên cột, vd: 2A", "Khối là cặp địa chỉ ô trên cùng bên trái và dưới cùng bên phải, vd: A2:B5"], correct: 2, ref: "Câu 1 - Excel" },
+            { q: "Trong Microsoft Excel, nếu chọn ô A2 có chữ 'DongNai 3', dùng chức năng Fill Series thì ô E2 nhận kết quả:", options: ["DongNai 6", "DongNai 7", "DongNai 5", "DongNai 4"], correct: 1, ref: "Câu 3 - Excel" },
+            { q: "Trong Microsoft Excel, muốn xóa hẳn một dòng đã chọn ra khỏi trang tính, ta dùng lệnh:", options: ["Nhấn phím Delete", "Click chuột phải, sau đó nhấn phím Delete", "Chọn lệnh: Home \\ Delete \\ Delete Sheet Rows", "Tất cả đều đúng"], correct: 2, ref: "Câu 4 - Excel" },
+            { q: "Phát biểu nào sau đây sai khi nhập dữ liệu vào bảng tính Excel?", options: ["Dữ liệu kiểu số sẽ mặc định canh lề trái trong ô", "Dữ liệu ký tự sẽ mặc định canh lề trái trong ô", "Dữ liệu kiểu logic sẽ mặc định canh giữa ô", "Dữ liệu kiểu ngày /giờ sẽ mặc định canh lề phải trong ô"], correct: 0, ref: "Câu 5 - Excel" },
+            { q: "Khi dữ liệu ban đầu thay đổi thì kết quả tính toán dựa trên công thức sẽ:", options: ["Tự động cập nhật", "Cần phải tính toán lại", "Không thay đổi", "Tất cả đều sai"], correct: 0, ref: "Câu 6 - Excel" },
+            { q: "Trong Microsoft Excel, tham chiếu đến một địa chỉ nhưng địa chỉ đó không tồn tại sẽ báo lỗi gì?", options: ["Lỗi #VALUE", "Lỗi #NA", "Lỗi #NUM", "Lỗi #REF"], correct: 3, ref: "Câu 8 - Excel" },
+            { q: "Trong Microsoft Excel, trong các công thức sau, công thức nào sai?", options: ["=MOD(1, 2)", "=INT(1, 2)", "=AVERAGE(1, 2, 3)", "=MIN(1, 2, 3)"], correct: 1, ref: "Câu 10 - Excel" },
+            { q: "Địa chỉ $A$1 được gọi là loại địa chỉ nào?", options: ["Địa chỉ tương đối", "Địa chỉ hỗn hợp", "Địa chỉ tuyệt đối", "Cả A và B đều đúng"], correct: 2, ref: "Câu 12 - Excel" },
+            { q: "Tại ô C5 có công thức: =$A$1*B1, khi sao chép sang ô D6 thì D6 có công thức là:", options: ["=$A$1*$B$1", "=$A$1*B$1", "=$A$1*C2", "=$A$1*$B1"], correct: 2, ref: "Câu 13 - Excel" },
+            { q: "Trong Microsoft Excel, công thức: =AND(10>1,20>10,30<10) cho kết quả:", options: ["TRUE", "FALSE", "60", "61"], correct: 1, ref: "Câu 14 - Excel" },
+            { q: "Với ĐTB cuối năm là 6.5, công thức =IF(ĐTB<5, 'Yếu', IF(ĐTB<6.5,'TB',IF(ĐTB<8,'Khá','Giỏi'))) trả về:", options: ["Giỏi", "Yếu", "TB", "Khá"], correct: 3, ref: "Câu 15 - Excel" },
+            { q: "Trong Microsoft Excel, công thức: =MOD(INT(25/7),2) cho kết quả là:", options: ["0", "1", "2", "5.5"], correct: 1, ref: "Câu 16 - Excel" },
+            { q: "Trong Microsoft Excel, công thức: =LEN('2008') cho kết quả là:", options: ["2008", "1", "4", "'2008'"], correct: 2, ref: "Câu 17 - Excel" },
+            { q: "Trong Microsoft Excel, công thức: =VALUE('007') cho kết quả là:", options: ["007", "3", "7", "Công thức sai"], correct: 2, ref: "Câu 18 - Excel" },
+            { q: "Giả sử ô A1, A2, A3 có chứa lần lượt dữ liệu: 234, An, 236. Ô A4 nhập =COUNT(A1:A3) cho kết quả:", options: ["2", "3", "4", "5"], correct: 0, ref: "Câu 20 - Excel" },
+            { q: "Các hàm nào sau đây đều thuộc nhóm hàm thống kê trong Excel?", options: ["LEN, MIN, IF", "MIN, AVERAGE, MAX, COUNT", "IF, MIN, AVERAGE, MAX", "LEN, LEFT, RIGHT, MID"], correct: 1, ref: "Câu 21 - Excel" },
+            { q: "Trong Microsoft Excel, để vẽ biểu đồ một cách chính xác nhất ta thực hiện:", options: ["Chọn lệnh: Insert \\ Chart, sau đó chọn dạng biểu đồ", "Chọn khối vùng số liệu vẽ biểu đồ, sau đó chọn lệnh: Insert \\ Chart và chọn dạng biểu đồ", "Chọn lệnh: Home \\ Chart, sau đó chọn dạng biểu đồ", "Cả A và B đều đúng"], correct: 1, ref: "Câu 22 - Excel" },
+            { q: "Trong Microsoft Excel, để sắp xếp dữ liệu trong bảng tính, ta chọn vùng dữ liệu và chọn lệnh:", options: ["Formulas \\ Sort", "Data \\ Autofilter", "Insert \\ Sort", "Data \\ Sort"], correct: 3, ref: "Câu 24 - Excel" },
+            { q: "Để lọc dữ liệu trong bảng tính Excel, ta chọn vùng dữ liệu cần lọc và chọn lệnh:", options: ["Home \\ Sort & Filter \\ Custom Sort", "Data \\ Filter", "Insert \\ Sort & Filter \\ Filter", "Data \\ Sort"], correct: 1, ref: "Câu 25 - Excel" },
+            { q: "Xem bảng báo cáo mẫu câu 26, để điền thông tin cho cột Đơn giá từ bảng tham khảo, công thức tại ô D3 là:", options: ["=HLOOKUP(B3,$B$12:$D$14,3,0)", "=VLOOKUP(B3,$B$12:$D$14,3,0)", "=VLOOKUP(B3,$C$12:$D$14,3,0)", "=VLOOKUP(B3,$B$12:$C$14,2,0)"], correct: 1, ref: "Câu 26 - Excel B" }
         ];
 
-        // Xáo trộn ngẫu nhiên bộ câu hỏi để làm bài khách quan hơn
+        // Trộn ngẫu nhiên câu hỏi
         const questions = rawQuestions.sort(() => 0.5 - Math.random());
 
         let score = 0;
@@ -427,18 +242,17 @@
         let currentQuestionIndex = 0;
         let firstTry = true;
 
-        // Render từng câu hỏi lên trang web
         function renderQuiz() {
             const container = document.getElementById('quiz-container');
             container.innerHTML = '';
-
+            
             if (currentQuestionIndex >= questions.length) {
                 showResults();
                 return;
             }
 
             document.getElementById('progress').innerText = `Câu hỏi: ${currentQuestionIndex + 1} / ${questions.length}`;
-            
+
             firstTry = true;
             const qData = questions[currentQuestionIndex];
             const index = currentQuestionIndex;
@@ -479,13 +293,12 @@
             const exp = document.createElement('div');
             exp.className = 'explanation';
             exp.id = `explanation-${index}`;
-            exp.innerText = `Nguồn tài liệu: ${qData.ref} | Chuyển sang câu tiếp theo...`;
+            exp.innerText = `Mã nguồn tài liệu gốc: ${qData.ref} | Chuyển sang câu tiếp theo...`;
             card.appendChild(exp);
 
             container.appendChild(card);
         }
 
-        // Tính toán thời gian làm bài
         function startTimer() {
             timerInterval = setInterval(() => {
                 timeLeft++;
@@ -505,11 +318,9 @@
                 correctLabel.classList.add('correct');
                 explanation.style.display = 'block';
                 
-                // Disable all inputs
                 const inputs = document.querySelectorAll(`input[name="question-${index}"]`);
                 inputs.forEach(inp => inp.disabled = true);
                 
-                // Move to next question after 1.2 seconds
                 setTimeout(() => {
                     currentQuestionIndex++;
                     renderQuiz();
@@ -520,33 +331,29 @@
             }
         }
 
-        // Chấm điểm bài thi và hiển thị đáp án, lời giải
         function showResults() {
             clearInterval(timerInterval);
             document.getElementById('quiz-container').innerHTML = '';
             document.getElementById('submit-btn').style.display = 'none';
 
-            // Hiện bảng kết quả lên màn hình
             document.getElementById('result-box').style.display = 'block';
             document.getElementById('score-text').innerText = `${score} / ${questions.length} Câu`;
 
             const percentage = (score / questions.length) * 100;
             let feedback = "";
-            if (percentage >= 80) feedback = "Xuất sắc! Bạn đã nắm rất vững kiến thức lý thuyết văn phòng. 🎉";
+            if (percentage >= 80) feedback = "Quá xuất sắc! Bạn đã nắm trọn bộ lý thuyết văn phòng rồi. 🎉";
             else if (percentage >= 50) feedback = "Đạt yêu cầu! Cố gắng luyện tập thêm nhé. 👍";
-            else feedback = "Cần ôn tập kỹ lại! Hãy xem lại tài liệu để nhớ kiến thức. 📑";
+            else feedback = "Hãy luyện tập lại! Học kỹ các phần lý thuyết để nhớ sâu câu hỏi. 📑";
 
             document.getElementById('feedback-text').innerText = feedback;
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
-        // Khởi tạo ứng dụng khi load xong trang
         window.onload = function () {
             renderQuiz();
             startTimer();
         };
     </script>
-
 </body>
 
 </html>
